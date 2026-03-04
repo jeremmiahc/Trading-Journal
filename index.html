@@ -1834,11 +1834,16 @@ function previewTrack(idx) {
   if (!audioTracks[idx]) return;
   var audio = new Audio(audioTracks[idx].dataUrl);
   audio.volume = 0;
+  currentAudio = audio;
   audio.play().then(function() {
     fadeAudioIn(audio, 0.8, 600);
-    setTimeout(function() { fadeAudioOut(audio, 1500); }, 4000);
+    audio.addEventListener('timeupdate', function() {
+      var remaining = audio.duration - audio.currentTime;
+      if (!isNaN(remaining) && remaining <= 2.5 && audio.volume > 0.01) {
+        fadeAudioOut(audio, 2000);
+      }
+    });
   }).catch(function(){});
-  currentAudio = audio;
 }
 
 function removeTrack(idx) {
@@ -1865,10 +1870,15 @@ function playWinSound() {
   currentAudio = audio;
   audio.play().then(function() {
     fadeAudioIn(audio, 0.85, 800);
-    // Fade out after 8 seconds
-    fadeOutTimer = setTimeout(function() {
-      fadeAudioOut(audio, 2000);
-    }, 8000);
+    // Fade out 2 seconds before the track ends
+    audio.addEventListener('timeupdate', function() {
+      var remaining = audio.duration - audio.currentTime;
+      if (!isNaN(remaining) && remaining <= 2.5 && audio.volume > 0.01) {
+        clearTimeout(fadeOutTimer);
+        fadeOutTimer = null;
+        fadeAudioOut(audio, 2000);
+      }
+    });
   }).catch(function(){});
 }
 
