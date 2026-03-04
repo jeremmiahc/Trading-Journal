@@ -1236,6 +1236,43 @@ async function sbSelect(table, order) {
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return await r.json();
 }
+
+async function sbUpsert(table, row, onConflict) {
+  var url = SUPA_URL + '/rest/v1/' + table + '?on_conflict=' + onConflict;
+  var r = await fetch(url, {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(row)
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return await r.json();
+}
+
+async function sbGetOne(table, col, val) {
+  var url = SUPA_URL + '/rest/v1/' + table + '?' + col + '=eq.' + encodeURIComponent(val);
+  var r = await fetch(url, { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } });
+  if (!r.ok) return null;
+  var rows = await r.json();
+  return rows.length ? rows[0] : null;
+}
+
+async function sbGetAll(table) {
+  var url = SUPA_URL + '/rest/v1/' + table + '?order=created_at.desc&limit=500';
+  var r = await fetch(url, { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } });
+  if (!r.ok) return [];
+  return await r.json();
+}
+
+async function sbDelete(table, col, val) {
+  var url = SUPA_URL + '/rest/v1/' + table + '?' + col + '=eq.' + encodeURIComponent(val);
+  var r = await fetch(url, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+}
+
 async function sbInsert(table, row) {
   var url = SUPA_URL + '/rest/v1/' + table;
   var r = await fetch(url, { method:'POST', headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(row) });
@@ -2188,9 +2225,12 @@ function toggleRecap() {
   if (isOpen) loadRecap(todayStr());
 }
 
-function loadRecap(dateStr) {
+async function loadRecap(dateStr) {
   var saved = null;
-  try { saved = JSON.parse(localStorage.getItem(recapKey(dateStr))); } catch(e) {}
+  try {
+    var row = await sbGetOne('daily_recaps', 'date', dateStr);
+    saved = row ? row.data : null;
+  } catch(e) { try { saved = JSON.parse(localStorage.getItem(recapKey(dateStr))); } catch(e2) {} }
 
   // Build rating buttons
   var rb = document.getElementById('recap-rating-btns');
@@ -2223,7 +2263,7 @@ function loadRecap(dateStr) {
   if (sl) sl.textContent = saved ? '✓ Saved' : '';
 }
 
-function saveRecap() {
+async function saveRecap() {
   var ratingBtn = document.querySelector('.recap-rating-btn[class*="sel-"]');
   var rating = ratingBtn ? ratingBtn.getAttribute('data-val') : null;
   var data = {
@@ -2233,7 +2273,9 @@ function saveRecap() {
     different: (document.getElementById('rc-different') || {}).value || '',
     saved: new Date().toISOString()
   };
-  localStorage.setItem(recapKey(todayStr()), JSON.stringify(data));
+  try {
+    await sbUpsert('daily_recaps', { date: recapKey(todayStr()).replace('atj_recap_',''), data: data }, 'date');
+  } catch(e) { console.warn('Recap save failed:', e); }
   var lbl = document.getElementById('recap-last-saved');
   if (lbl) lbl.textContent = 'Last saved ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
   var sl = document.getElementById('recap-saved-label');
@@ -2411,7 +2453,7 @@ function weekKey(offset) {
   return 'review_' + r.start.toISOString().split('T')[0];
 }
 
-function saveReview() {
+async function saveReview() {
   var key = weekKey(reviewWeekOffset);
   var data = {
     well: document.getElementById('r-well').value,
@@ -2420,16 +2462,18 @@ function saveReview() {
     discipline: getToggle('discipline'),
     saved: new Date().toISOString()
   };
-  localStorage.setItem(key, JSON.stringify(data));
-  toast('Review saved', 'green');
+  try {
+    await sbUpsert('weekly_reviews', { week_key: key.replace('atj_review_',''), data: data }, 'week_key');
+    toast('Review saved', 'green');
+  } catch(e) { localStorage.setItem(key, JSON.stringify(data)); toast('Review saved (local)', 'green'); }
 }
 
-function loadPastReview(dir) {
+async function loadPastReview(dir) {
   reviewWeekOffset += dir;
   renderReview();
 }
 
-function renderReview() {
+async function renderReview() {
   var range = getWeekRange(reviewWeekOffset);
   var startStr = range.start.toISOString().split('T')[0];
   var endStr = range.end.toISOString().split('T')[0];
@@ -2453,7 +2497,12 @@ function renderReview() {
   // Load saved review
   var key = weekKey(reviewWeekOffset);
   var saved = null;
-  try { saved = JSON.parse(localStorage.getItem(key)); } catch(e) {}
+  try {
+    var wk = key.replace('atj_review_','');
+    var wrow = await sbGetOne('weekly_reviews', 'week_key', wk);
+    saved = wrow ? wrow.data : null;
+    if (!saved) saved = JSON.parse(localStorage.getItem(key));
+  } catch(e) { try { saved = JSON.parse(localStorage.getItem(key)); } catch(e2) {} }
   document.getElementById('r-well').value = saved ? saved.well||'' : '';
   document.getElementById('r-patterns').value = saved ? saved.patterns||'' : '';
   document.getElementById('r-focus').value = saved ? saved.focus||'' : '';
@@ -2506,11 +2555,16 @@ async function init() {
 init();
 
 // ── DATA MANAGEMENT ──
-function renderDataManagement() {
+async function renderDataManagement() {
   var reviewKeys = [];
-  for (var i = 0; i < localStorage.length; i++) {
-    var k = localStorage.key(i);
-    if (k && k.startsWith('atj_review_')) reviewKeys.push(k);
+  try {
+    var allReviews = await sbGetAll('weekly_reviews');
+    reviewKeys = allReviews.map(function(r){ return 'atj_review_' + r.week_key; });
+  } catch(e) {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.startsWith('atj_review_')) reviewKeys.push(k);
+    }
   }
   reviewKeys.sort().reverse();
   var rl = document.getElementById('review-list');
@@ -2529,9 +2583,14 @@ function renderDataManagement() {
   }
 
   var recapKeys = [];
-  for (var i = 0; i < localStorage.length; i++) {
-    var k = localStorage.key(i);
-    if (k && k.startsWith('atj_recap_')) recapKeys.push(k);
+  try {
+    var allRecaps = await sbGetAll('daily_recaps');
+    recapKeys = allRecaps.map(function(r){ return 'atj_recap_' + r.date; });
+  } catch(e) {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.startsWith('atj_recap_')) recapKeys.push(k);
+    }
   }
   recapKeys.sort().reverse();
   var rpl = document.getElementById('recap-list');
@@ -2550,37 +2609,43 @@ function renderDataManagement() {
   }
 }
 
-function deleteSingleReview(key) {
+async function deleteSingleReview(key) {
   if (!confirm('Delete this weekly review?')) return;
-  localStorage.removeItem(key);
+  try { await sbDelete('weekly_reviews', 'week_key', key.replace('atj_review_','')); } catch(e) { localStorage.removeItem(key); }
   renderDataManagement();
 }
 
-function deleteSingleRecap(key) {
+async function deleteSingleRecap(key) {
   if (!confirm('Delete this daily recap?')) return;
-  localStorage.removeItem(key);
+  try { await sbDelete('daily_recaps', 'date', key.replace('atj_recap_','')); } catch(e) { localStorage.removeItem(key); }
   renderDataManagement();
 }
 
-function clearAllWeeklyReviews() {
+async function clearAllWeeklyReviews() {
   if (!confirm('Delete all weekly reviews? This cannot be undone.')) return;
   var keys = [];
   for (var i = 0; i < localStorage.length; i++) {
     var k = localStorage.key(i);
     if (k && k.startsWith('atj_review_')) keys.push(k);
   }
-  keys.forEach(function(k) { localStorage.removeItem(k); });
+  try {
+    var toDelete = await sbGetAll('weekly_reviews');
+    for (var i=0; i<toDelete.length; i++) await sbDelete('weekly_reviews','week_key',toDelete[i].week_key);
+  } catch(e) { keys.forEach(function(k){ localStorage.removeItem(k); }); }
   renderDataManagement();
 }
 
-function clearAllDailyRecaps() {
+async function clearAllDailyRecaps() {
   if (!confirm('Delete all daily recaps? This cannot be undone.')) return;
   var keys = [];
   for (var i = 0; i < localStorage.length; i++) {
     var k = localStorage.key(i);
     if (k && k.startsWith('atj_recap_')) keys.push(k);
   }
-  keys.forEach(function(k) { localStorage.removeItem(k); });
+  try {
+    var toDelete2 = await sbGetAll('daily_recaps');
+    for (var i=0; i<toDelete2.length; i++) await sbDelete('daily_recaps','date',toDelete2[i].date);
+  } catch(e) { keys.forEach(function(k){ localStorage.removeItem(k); }); }
   renderDataManagement();
 }
 
@@ -2603,7 +2668,7 @@ function initPnlCards() {
   renderWeeklyCard();
 }
 
-function renderDailyCard() {
+async function renderDailyCard() {
   var wrap = document.getElementById('pnlc-daily-card-wrap');
   if (!wrap) return;
   var dateStr = document.getElementById('pnlc-date').value;
@@ -2634,7 +2699,7 @@ function renderDailyCard() {
 
   // Recap note from localStorage
   var recap = null;
-  try { recap = JSON.parse(localStorage.getItem('atj_recap_' + dateStr)); } catch(e) {}
+  try { var recapRow = await sbGetOne('daily_recaps', 'date', dateStr); recap = recapRow ? recapRow.data : null; } catch(e) {}
   var noteText = (recap && (recap.market || recap.plan)) ? (recap.market || recap.plan) : null;
 
   var ssHtml = '';
