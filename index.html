@@ -1343,7 +1343,34 @@ async function loadTrades() {
   }
 }
 
-async function saveTrade() {
+async 
+async function uploadScreenshots() {
+  if (!ssFiles.length) return [];
+  var urls = [];
+  for (var i = 0; i < ssFiles.length; i++) {
+    var file = ssFiles[i];
+    var ext = file.name.split('.').pop() || 'jpg';
+    var path = 'trade-' + Date.now() + '-' + i + '.' + ext;
+    var res = await fetch(SUPA_URL + '/storage/v1/object/screenshots/' + path, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': file.type || 'image/jpeg',
+        'x-upsert': 'true'
+      },
+      body: file
+    });
+    if (!res.ok) {
+      var err = await res.text();
+      throw new Error('Screenshot upload failed: ' + err);
+    }
+    urls.push(SUPA_URL + '/storage/v1/object/public/screenshots/' + path);
+  }
+  return urls;
+}
+
+function saveTrade() {
   var date = document.getElementById('f-date').value;
   var direction = getToggle('direction');
   var outcome = getToggle('outcome');
@@ -1388,9 +1415,16 @@ async function saveTrade() {
   };
 
   var btn = document.getElementById('save-btn');
-  btn.textContent = 'Saving...'; btn.disabled = true;
+  btn.textContent = 'Uploading...'; btn.disabled = true;
 
   try {
+    var screenshotUrls = [];
+    if (ssFiles.length) {
+      btn.textContent = 'Uploading ' + ssFiles.length + ' screenshot' + (ssFiles.length>1?'s':'') + '...';
+      screenshotUrls = await uploadScreenshots();
+    }
+    trade.screenshot_urls = screenshotUrls;
+    btn.textContent = 'Saving...';
     var inserted = await sbInsert('trades', trade);
     var newTrade = Array.isArray(inserted) ? inserted[0] : inserted;
     trades.unshift(newTrade);
