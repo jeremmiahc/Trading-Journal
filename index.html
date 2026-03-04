@@ -553,7 +553,90 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
   .pnlc-empty { font-size: 12px; color: var(--text3); padding: 20px 0; }
   .pnlc-no-data { font-size: 12px; color: var(--text3); font-style: italic; }
 
+
+  /* ── SHARE BUTTONS ── */
+  .pnlc-share-row { display: flex; gap: 8px; margin-top: 14px; }
+  .pnlc-share-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 7px; border: none;
+    font-family: var(--sans); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .pnlc-share-btn.download {
+    background: #1e1c18; color: #d8d0c0; border: 1px solid #2a2820;
+  }
+  .pnlc-share-btn.download:hover { background: #2a2820; }
+  .pnlc-share-btn.copy {
+    background: #f4f3f0; color: #1a1814; border: 1px solid #e4e0d8;
+  }
+  .pnlc-share-btn.copy:hover { background: #e8e4dc; }
+  .pnlc-share-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .pnlc-share-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+// ── SHARE CARD ──
+function captureCard(type, callback) {
+  var cardId = type === 'daily' ? 'pnlc-daily-card-wrap' : 'pnlc-weekly-card-wrap';
+  var wrap = document.getElementById(cardId);
+  var card = wrap ? wrap.firstElementChild : null;
+  if (!card) return;
+  html2canvas(card, {
+    backgroundColor: null,
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    logging: false
+  }).then(function(canvas) {
+    callback(canvas);
+  });
+}
+
+function downloadCard(type) {
+  var btn = event.target.closest('button');
+  var origText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><circle cx="12" cy="12" r="10"/></svg> Capturing...';
+  captureCard(type, function(canvas) {
+    var link = document.createElement('a');
+    var dateEl = document.getElementById(type === 'daily' ? 'pnlc-date' : 'pnlc-week');
+    var dateStr = dateEl ? dateEl.value : 'card';
+    link.download = 'nq-journal-' + type + '-' + dateStr + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.disabled = false;
+    btn.innerHTML = origText;
+  });
+}
+
+function copyCard(type) {
+  var btn = event.target.closest('button');
+  var origText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><circle cx="12" cy="12" r="10"/></svg> Copying...';
+  captureCard(type, function(canvas) {
+    canvas.toBlob(function(blob) {
+      try {
+        var item = new ClipboardItem({ 'image/png': blob });
+        navigator.clipboard.write([item]).then(function() {
+          btn.disabled = false;
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+          setTimeout(function() { btn.innerHTML = origText; }, 2000);
+        });
+      } catch(e) {
+        // Fallback: just download if clipboard API not available
+        var link = document.createElement('a');
+        link.download = 'nq-journal-' + type + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    });
+  });
+}
+
+</script>
 </head>
 <body>
 
@@ -953,6 +1036,16 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
         <input type="date" id="pnlc-date" onchange="renderDailyCard()">
       </div>
       <div id="pnlc-daily-card-wrap"></div>
+      <div class="pnlc-share-row" id="pnlc-daily-share" style="display:none">
+        <button class="pnlc-share-btn download" onclick="downloadCard('daily')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Save Image
+        </button>
+        <button class="pnlc-share-btn copy" onclick="copyCard('daily')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy to Clipboard
+        </button>
+      </div>
     </div>
 
     <!-- WEEKLY PANEL -->
@@ -963,6 +1056,16 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
         <span style="font-size:11px;color:var(--text3)">(pick any day in the week)</span>
       </div>
       <div id="pnlc-weekly-card-wrap"></div>
+      <div class="pnlc-share-row" id="pnlc-weekly-share" style="display:none">
+        <button class="pnlc-share-btn download" onclick="downloadCard('weekly')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Save Image
+        </button>
+        <button class="pnlc-share-btn copy" onclick="copyCard('weekly')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy to Clipboard
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2488,6 +2591,7 @@ function renderDailyCard() {
   var rStr = (totalR >= 0 ? '+' : '') + totalR.toFixed(1) + 'R';
   var dateLabel = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric', year:'numeric' });
 
+  document.getElementById('pnlc-daily-share').style.display='flex';
   wrap.innerHTML =
     '<div class="pnl-daily-card">' +
       '<div class="pdc-accent ' + (isPos?'pos':'neg') + '"></div>' +
@@ -2581,6 +2685,7 @@ function renderWeeklyCard() {
   var pnlStr = (totalPnl>=0?'+$':'-$')+Math.abs(totalPnl).toLocaleString();
   var rTotalStr = (totalR>=0?'+':'')+totalR.toFixed(1)+'R';
 
+  document.getElementById('pnlc-weekly-share').style.display='flex';
   wrap.innerHTML =
     '<div class="pnl-weekly-card">' +
       '<div class="pwc-header">' +
