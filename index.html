@@ -388,6 +388,75 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
   .win-flash { position: fixed; inset: 0; background: rgba(26,122,82,0.08); pointer-events: none; z-index: 500; opacity: 0; transition: opacity 0.4s; }
   .win-flash.show { opacity: 1; }
 
+
+  /* ── FLIP CARDS ── */
+  .flip-card { width: 100%; perspective: 1200px; cursor: pointer; }
+  .flip-card-inner {
+    position: relative; width: 100%; min-height: 110px;
+    transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    transform-style: preserve-3d;
+  }
+  .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+  .flip-front, .flip-back {
+    position: absolute; inset: 0; border-radius: 8px;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  }
+  .flip-front {
+    background: var(--white); border: 1px solid var(--line); overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .flip-card:hover .flip-front { border-color: var(--line2); }
+  .flip-back { transform: rotateY(180deg); overflow: hidden; }
+  .flip-back.back-win {
+    background: linear-gradient(135deg,#0d2018 0%,#0a1a10 100%);
+    border: 1px solid #1a7a52;
+  }
+  .flip-back.back-loss {
+    background: linear-gradient(135deg,#200d0d 0%,#1a0808 100%);
+    border: 1px solid #b84040;
+  }
+  .flip-back.back-be {
+    background: linear-gradient(135deg,#1a1608 0%,#141008 100%);
+    border: 1px solid #9a6820;
+  }
+  .back-inner { padding: 14px 16px; height: 100%; display: flex; flex-direction: column; gap: 9px; }
+  .back-top { display: flex; align-items: flex-start; justify-content: space-between; }
+  .back-r { font-size: 30px; font-weight: 300; line-height: 1; letter-spacing: -1px; }
+  .back-win .back-r { color: #4ab880; }
+  .back-loss .back-r { color: #d06060; }
+  .back-be .back-r { color: #c89840; }
+  .back-pnl { font-size: 12px; font-weight: 600; }
+  .back-win .back-pnl { color: #3a9060; }
+  .back-loss .back-pnl { color: #904040; }
+  .back-be .back-pnl { color: #907030; }
+  .back-stop { font-size: 9px; margin-top: 2px; }
+  .back-win .back-stop { color: #1a5030; }
+  .back-loss .back-stop { color: #501818; }
+  .back-be .back-stop { color: #503010; }
+  .back-why { font-size: 11px; line-height: 1.55; font-style: italic; flex: 1; }
+  .back-win .back-why { color: #2a6040; }
+  .back-loss .back-why { color: #703030; }
+  .back-be .back-why { color: #604020; }
+  .back-footer { display: flex; align-items: center; justify-content: space-between; }
+  .back-stats { display: flex; gap: 10px; }
+  .back-stat { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .back-win .back-stat { color: #1a4028; }
+  .back-loss .back-stat { color: #401818; }
+  .back-be .back-stat { color: #403010; }
+  .back-stat span { font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .back-win .back-stat span { color: #3a7050; }
+  .back-loss .back-stat span { color: #704040; }
+  .back-be .back-stat span { color: #705030; }
+  .back-view-btn {
+    font-size: 9px; font-weight: 600; padding: 4px 10px; border-radius: 4px;
+    cursor: pointer; letter-spacing: 0.5px; text-transform: uppercase; border: none;
+    font-family: var(--sans); transition: all 0.15s;
+  }
+  .back-win .back-view-btn { background: rgba(26,122,82,0.2); color: #4ab880; border: 1px solid #1a7a52; }
+  .back-loss .back-view-btn { background: rgba(184,64,64,0.2); color: #d06060; border: 1px solid #b84040; }
+  .back-be .back-view-btn { background: rgba(154,104,32,0.2); color: #c89840; border: 1px solid #9a6820; }
+  .flip-hint { font-size: 9.5px; color: var(--text3); text-align: center; margin-top: 4px; }
+
 </style>
 </head>
 <body>
@@ -693,7 +762,15 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
 
   <!-- STATISTICS -->
   <div class="page" id="page-statistics">
-    <div class="page-header"><div class="page-title">Statistics</div><div class="page-sub">Performance breakdown — all time</div></div>
+    <div class="page-header"><div class="page-title">Statistics</div><div class="page-sub">Performance breakdown — all time</div>
+    <div style="margin-top:16px">
+      <div class="panel-hdr" style="margin-bottom:10px">
+        <div class="panel-title">Confluence Correlation</div>
+        <div class="panel-meta">Win rate per confluence checked</div>
+      </div>
+      <div id="conf-corr-table" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+</div>
     <div class="grid-4" id="stats-top" style="margin-bottom:12px"></div>
     <div class="row">
       <div class="panel"><div class="panel-header"><div class="panel-title">Win Rate by POI</div></div><div class="panel-body" id="stats-poi"></div></div>
@@ -831,6 +908,28 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
           <button class="btn btn-ghost btn-sm" onclick="exportJSON()">Export JSON</button>
         </div>
         <div style="font-size:10px;color:var(--text3)" id="export-count">—</div>
+      </div>
+      <div class="setting-card" style="grid-column:1/-1">
+        <div class="setting-title">Data Management</div>
+        <div class="setting-sub">Delete individual entries or clear everything. Your trades in Supabase are not affected.</div>
+
+        <div style="margin-top:14px">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:8px">Weekly Reviews</div>
+          <div id="review-list" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;margin-bottom:8px"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:10px;color:var(--text3)" id="review-count-label">—</div>
+            <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red-mid);font-size:10px" onclick="clearAllWeeklyReviews()">Delete All</button>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line)">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);margin-bottom:8px">Daily Recaps</div>
+          <div id="recap-list" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;margin-bottom:8px"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:10px;color:var(--text3)" id="recap-count-label">—</div>
+            <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red-mid);font-size:10px" onclick="clearAllDailyRecaps()">Delete All</button>
+          </div>
+        </div>
       </div>
       <div class="setting-card" style="grid-column:1/-1">
         <div class="setting-title">🎵 Win Sounds</div>
@@ -1187,6 +1286,8 @@ function nav(page, el) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   var pg = document.getElementById('page-' + page);
   if (pg) pg.classList.add('active');
+  if (page === 'settings') renderDataManagement();
+  if (page === 'statistics') renderConfluenceCorrelation();
   var labels = {dashboard:'Dashboard',calendar:'Calendar',log:'Trade Log',new:'New Trade',statistics:'Statistics',compliance:'Compliance',settings:'Settings'};
   var tp = document.getElementById('tb-page'); if (tp) tp.textContent = labels[page] || page;
   if (page === 'calendar') renderCalendar();
@@ -1376,6 +1477,56 @@ function buildRules(ts) {
 }
 
 // ── TRADE LOG ──
+
+function handleCardFlip(event, id) {
+  if (event.target.classList.contains('back-view-btn')) return;
+  var card = document.getElementById('fc-' + id);
+  if (card) card.classList.toggle('flipped');
+}
+
+
+function renderConfluenceCorrelation() {
+  var el = document.getElementById('conf-corr-table');
+  if (!el) return;
+  if (!trades.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">No trades yet</div>'; return; }
+
+  // Build per-confluence stats
+  var confStats = {};
+  trades.forEach(function(t) {
+    var c = t.confluences || {};
+    Object.keys(c).forEach(function(k) {
+      if (!c[k]) return; // only count when checked
+      if (!confStats[k]) confStats[k] = { wins: 0, total: 0 };
+      confStats[k].total++;
+      if (t.outcome === 'Win') confStats[k].wins++;
+    });
+  });
+
+  var keys = Object.keys(confStats).filter(function(k) { return confStats[k].total >= 1; });
+  if (!keys.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">Log more trades to see correlation</div>'; return; }
+
+  // Sort by win rate desc
+  keys.sort(function(a,b) {
+    var wrA = confStats[a].wins / confStats[a].total;
+    var wrB = confStats[b].wins / confStats[b].total;
+    return wrB - wrA;
+  });
+
+  el.innerHTML = keys.map(function(k) {
+    var s = confStats[k];
+    var wr = Math.round(s.wins / s.total * 100);
+    var barColor = wr >= 60 ? 'var(--green)' : wr >= 40 ? 'var(--amber)' : 'var(--red)';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--white);border:1px solid var(--line);border-radius:6px">' +
+      '<div style="width:130px;font-size:11px;font-weight:500;color:var(--text2);flex-shrink:0">' + k + '</div>' +
+      '<div style="flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden">' +
+        '<div style="width:' + wr + '%;height:100%;background:' + barColor + ';border-radius:3px;transition:width 0.4s ease"></div>' +
+      '</div>' +
+      '<div style="width:36px;text-align:right;font-size:12px;font-weight:600;color:' + barColor + '">' + wr + '%</div>' +
+      '<div style="width:40px;text-align:right;font-size:10px;color:var(--text3)">' + s.wins + '/' + s.total + '</div>' +
+    '</div>';
+  }).join('');
+}
+
 function renderLog() {
   var sub = document.getElementById('log-sub');
   if(sub) sub.textContent = trades.length + ' trade' + (trades.length!==1?'s':'') + ' logged';
@@ -1390,24 +1541,47 @@ function renderLog() {
     var confs = '';
     var c = t.confluences || {};
     Object.keys(c).forEach(function(k) { confs += '<span class="cpill ' + (c[k]?'yes':'no') + '">' + k + '</span>'; });
-    var sayCount = ((t.says||[]).filter(Boolean)).length;
-    html += '<div class="trade-card" onclick="openModal(' + t.id + ')">' +
-      '<div class="tc-top">' +
-        '<span class="dir-badge ' + dirClass(t.direction) + '">' + t.direction + '</span>' +
-        '<span class="tc-meta">' + fDate(t.date) + '</span>' +
-        (t.poi ? '<span class="poi-tag">' + t.poi + '</span>' : '') +
-        (t.emotion ? '<span class="emotion-badge emotion-' + t.emotion.toLowerCase() + '">' + t.emotion + '</span>' : '') +
-        '<span class="outcome-badge ' + outcomeClass(t.outcome) + '" style="margin-left:auto">' + t.outcome + '</span>' +
-      '</div>' +
-      '<div class="tc-body">' +
-        '<div class="tcb"><div class="tcb-label">Confluences</div><div class="conf-pills">' + (confs || '<span style="font-size:11px;color:var(--text3)">None</span>') + '</div></div>' +
-        (t.r_result!=null ? '<div class="tcb"><div class="tcb-label">R Result</div><div class="tcb-val" style="font-weight:600;color:'+(t.r_result>0?'var(--green)':t.r_result<0?'var(--red)':'var(--text3)')+';">'+(t.r_result>0?'+':'')+t.r_result+'R</div></div>' : '') +
-        (t.pnl_usd!=null ? '<div class="tcb"><div class="tcb-label">P&#38;L</div><div class="tcb-val" style="font-weight:600;color:'+(t.pnl_usd>0?'var(--green)':t.pnl_usd<0?'var(--red)':'var(--text3)')+';">'+(t.pnl_usd>0?'$+':'$')+t.pnl_usd+'</div></div>' : '') +
-        (t.mistakes ? '<div class="tcb"><div class="tcb-label">Mistake</div><div class="tcb-val">' + t.mistakes.slice(0,70) + (t.mistakes.length>70?'...':'') + '</div></div>' : '') +
-      '</div>' +
-    '</div>';
+    var backClass = t.outcome==='Win'?'back-win':t.outcome==='Loss'?'back-loss':'back-be';
+    var rStr = t.r_result!=null?(t.r_result>0?'+':'')+t.r_result+'R':(t.outcome||'—');
+    var pnlStr = t.pnl_usd!=null?(t.pnl_usd>0?'+$':'$')+t.pnl_usd:'';
+    var whyStr = (t.why_taken||t.notes||'No notes logged.').slice(0,120);
+    if ((t.why_taken||t.notes||'').length > 120) whyStr += '...';
+    html +=
+      '<div class="flip-card" id="fc-'+t.id+'" onclick="handleCardFlip(event,'+t.id+')">' +
+        '<div class="flip-card-inner">' +
+          '<div class="flip-front">' +
+            '<div class="tc-top">' +
+              '<span class="dir-badge '+dirClass(t.direction)+'">'+t.direction+'</span>' +
+              '<span class="tc-meta">'+fDate(t.date)+'</span>' +
+              (t.poi?'<span class="poi-tag">'+t.poi+'</span>':'') +
+              (t.emotion?'<span class="emotion-badge emotion-'+t.emotion.toLowerCase()+'">'+t.emotion+'</span>':'') +
+              '<span class="outcome-badge '+outcomeClass(t.outcome)+'" style="margin-left:auto">'+t.outcome+'</span>' +
+            '</div>' +
+            '<div class="tc-body">' +
+              '<div class="tcb"><div class="tcb-label">Confluences</div><div class="conf-pills">'+(confs||'<span style="font-size:11px;color:var(--text3)">None</span>')+'</div></div>' +
+              (t.r_result!=null?'<div class="tcb"><div class="tcb-label">R Result</div><div class="tcb-val" style="font-weight:600;color:'+(t.r_result>0?'var(--green)':t.r_result<0?'var(--red)':'var(--text3)')+';">'+(t.r_result>0?'+':'')+t.r_result+'R</div></div>':'') +
+              (t.pnl_usd!=null?'<div class="tcb"><div class="tcb-label">P&#38;L</div><div class="tcb-val" style="font-weight:600;color:'+(t.pnl_usd>0?'var(--green)':t.pnl_usd<0?'var(--red)':'var(--text3)')+';">'+(t.pnl_usd>0?'$+':'$')+t.pnl_usd+'</div></div>':'') +
+            '</div>' +
+          '</div>' +
+          '<div class="flip-back '+backClass+'">' +
+            '<div class="back-inner">' +
+              '<div class="back-top">' +
+                '<div class="back-r">'+rStr+'</div>' +
+                '<div>'+(pnlStr?'<div class="back-pnl">'+pnlStr+'</div>':'')+(t.stop_pts?'<div class="back-stop">Stop: '+t.stop_pts+' pts</div>':'')+'</div>' +
+              '</div>' +
+              '<div class="back-why">&ldquo;'+whyStr+'&rdquo;</div>' +
+              '<div class="back-footer">' +
+                '<div class="back-stats">' +
+                  '<div class="back-stat">Emotion <span>'+(t.emotion||'—')+'</span></div>' +
+                '</div>' +
+                '<button class="back-view-btn" onclick="event.stopPropagation();openModal('+t.id+')">View Full ↗</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
   });
-  html += '</div>';
+  html += '</div><div class="flip-hint">click to flip · click again to flip back</div>';
   list.innerHTML = html;
 }
 
@@ -2015,7 +2189,8 @@ function renderReview() {
   }
 }
 
-function renderAll(){renderDashboard();renderLog();}
+function renderAll(){
+  renderConfluenceCorrelation();renderDashboard();renderLog();}
 
 // ── INIT ──
 async function init() {
@@ -2029,6 +2204,86 @@ async function init() {
 }
 
 init();
+
+// ── DATA MANAGEMENT ──
+function renderDataManagement() {
+  var reviewKeys = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && k.startsWith('atj_review_')) reviewKeys.push(k);
+  }
+  reviewKeys.sort().reverse();
+  var rl = document.getElementById('review-list');
+  var rc = document.getElementById('review-count-label');
+  if (rc) rc.textContent = reviewKeys.length ? reviewKeys.length + ' saved' : 'None saved';
+  if (rl) {
+    rl.innerHTML = reviewKeys.length === 0
+      ? '<div style="font-size:11px;color:var(--text3);padding:4px 0">No weekly reviews saved</div>'
+      : reviewKeys.map(function(k) {
+          var d = k.replace('atj_review_', '').replace(/_/g,'-');
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--s2);border-radius:5px;border:1px solid var(--line)">'
+            + '<span style="font-size:11px;color:var(--text2)">Week of ' + d + '</span>'
+            + '<button onclick="deleteSingleReview(&quot;' + k + '&quot;)" style="font-size:10px;color:var(--red);background:none;border:none;cursor:pointer;font-family:var(--sans);padding:0">Delete</button>'
+            + '</div>';
+        }).join('');
+  }
+
+  var recapKeys = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && k.startsWith('atj_recap_')) recapKeys.push(k);
+  }
+  recapKeys.sort().reverse();
+  var rpl = document.getElementById('recap-list');
+  var rpc = document.getElementById('recap-count-label');
+  if (rpc) rpc.textContent = recapKeys.length ? recapKeys.length + ' saved' : 'None saved';
+  if (rpl) {
+    rpl.innerHTML = recapKeys.length === 0
+      ? '<div style="font-size:11px;color:var(--text3);padding:4px 0">No daily recaps saved</div>'
+      : recapKeys.map(function(k) {
+          var d = k.replace('atj_recap_', '');
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--s2);border-radius:5px;border:1px solid var(--line)">'
+            + '<span style="font-size:11px;color:var(--text2)">' + d + '</span>'
+            + '<button onclick="deleteSingleRecap(&quot;' + k + '&quot;)" style="font-size:10px;color:var(--red);background:none;border:none;cursor:pointer;font-family:var(--sans);padding:0">Delete</button>'
+            + '</div>';
+        }).join('');
+  }
+}
+
+function deleteSingleReview(key) {
+  if (!confirm('Delete this weekly review?')) return;
+  localStorage.removeItem(key);
+  renderDataManagement();
+}
+
+function deleteSingleRecap(key) {
+  if (!confirm('Delete this daily recap?')) return;
+  localStorage.removeItem(key);
+  renderDataManagement();
+}
+
+function clearAllWeeklyReviews() {
+  if (!confirm('Delete all weekly reviews? This cannot be undone.')) return;
+  var keys = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && k.startsWith('atj_review_')) keys.push(k);
+  }
+  keys.forEach(function(k) { localStorage.removeItem(k); });
+  renderDataManagement();
+}
+
+function clearAllDailyRecaps() {
+  if (!confirm('Delete all daily recaps? This cannot be undone.')) return;
+  var keys = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && k.startsWith('atj_recap_')) keys.push(k);
+  }
+  keys.forEach(function(k) { localStorage.removeItem(k); });
+  renderDataManagement();
+}
+
 </script>
 </body>
 </html>
