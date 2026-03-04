@@ -573,6 +573,14 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
   .pnlc-share-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .pnlc-share-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
+
+  /* ── LIGHTBOX ── */
+  .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out; }
+  .lightbox.open { display:flex; }
+  .lightbox img { max-width:92vw; max-height:92vh; border-radius:8px; object-fit:contain; box-shadow:0 24px 80px rgba(0,0,0,0.8); }
+  .lightbox-close { position:absolute; top:20px; right:24px; font-size:28px; color:#fff; cursor:pointer; opacity:0.6; line-height:1; }
+  .lightbox-close:hover { opacity:1; }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
 // ── SHARE CARD ──
@@ -635,6 +643,19 @@ function copyCard(type) {
     });
   });
 }
+
+
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightbox-img').src = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
 
 </script>
 </head>
@@ -1954,7 +1975,19 @@ function openModal(id) {
       (t.why_taken?'<div><div class="modal-section-title">Why I Took This Trade</div><div class="modal-text" style="color:var(--blue)">'+t.why_taken+'</div></div>':'')+
       (t.emotion?'<div><div class="modal-section-title">Emotional State</div><div><span class="emotion-badge emotion-'+t.emotion.toLowerCase()+'">'+t.emotion+'</span></div></div>':'')+
       (t.notes?'<div><div class="modal-section-title">Notes</div><div class="modal-text">'+t.notes+'</div></div>':'')+
-      (t.mistakes?'<div><div class="modal-section-title">Mistakes</div><div class="modal-text" style="color:var(--red)">'+t.mistakes+'</div></div>':'');
+      (t.mistakes?'<div><div class="modal-section-title">Mistakes</div><div class="modal-text" style="color:var(--red)">'+t.mistakes+'</div></div>':'')+
+      (function(){
+        var shots = t.screenshot_urls || t.screenshots || [];
+        if (typeof shots === 'string') { try { shots = JSON.parse(shots); } catch(e) { shots = []; } }
+        shots = shots.filter(Boolean);
+        if (!shots.length) return '';
+        return '<div><div class="modal-section-title">Screenshots</div>' +
+          '<div style="display:flex;flex-direction:column;gap:8px">' +
+          shots.map(function(url) {
+            return '<img src="' + url + '" style="width:100%;border-radius:6px;border:1px solid var(--line);cursor:pointer" onclick="openLightbox(this.src)" loading="lazy" alt="trade screenshot">';
+          }).join('') +
+          '</div></div>';
+      })();
   }
   var del=document.getElementById('modal-del'); if(del)del.onclick=function(){deleteTrade(id);};
   var mo=document.getElementById('modal'); if(mo)mo.classList.add('open');
@@ -2712,5 +2745,11 @@ function renderWeeklyCard() {
 }
 
 </script>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <div class="lightbox-close" onclick="closeLightbox()">✕</div>
+  <img id="lightbox-img" src="" alt="screenshot">
+</div>
+
 </body>
 </html>
