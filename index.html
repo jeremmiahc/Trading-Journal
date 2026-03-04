@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trading Journal</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -306,6 +306,88 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
   .ticker-val.amber { color: #c89840; }
   .ticker-sub { font-size: 10px; color: #504840; }
 
+
+  /* ── EMOTION BADGES ── */
+  .emotion-badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--s2); border: 1px solid var(--line); color: var(--text2); }
+  .emotion-calm { background: var(--green-bg); color: var(--green); border-color: var(--green-mid); }
+  .emotion-confident { background: var(--blue-bg); color: var(--blue); border-color: #b8ccf0; }
+  .emotion-fomo { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-mid); }
+  .emotion-revenge { background: var(--red-bg); color: var(--red); border-color: var(--red-mid); }
+  .emotion-bored { background: var(--s2); color: var(--text3); border-color: var(--line2); }
+  .emotion-anxious { background: #f5f0fb; color: #6040a0; border-color: #d0c0f0; }
+
+  /* ── REVIEW ── */
+  .review-prompt { background: var(--sidebar); border-radius: 10px; padding: 22px 24px; margin-bottom: 16px; border-left: 3px solid #c8b898; }
+  .review-prompt-title { font-family: var(--serif); font-size: 18px; color: #e8e0d0; margin-bottom: 4px; }
+  .review-prompt-sub { font-size: 11px; color: #504840; margin-bottom: 16px; }
+  .review-q { margin-bottom: 14px; }
+  .review-q-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #706858; margin-bottom: 6px; }
+  .review-textarea { background: #1e1c18; border: 1px solid #3a3428; border-radius: 6px; padding: 10px 12px; font-family: var(--sans); font-size: 12px; color: #d0c8b8; outline: none; resize: none; width: 100%; min-height: 70px; transition: border-color 0.15s; }
+  .review-textarea:focus { border-color: #706858; }
+  .review-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+  .review-stat { background: #1e1c18; border: 1px solid #2a2820; border-radius: 8px; padding: 12px 14px; }
+  .review-stat-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #504840; margin-bottom: 5px; }
+  .review-stat-val { font-family: var(--serif); font-size: 22px; color: #e8e0d0; }
+  .review-stat-val.green { color: #4ab880; }
+  .review-stat-val.red { color: #d06060; }
+  .emotion-breakdown { display: flex; flex-direction: column; gap: 6px; }
+  .emotion-row { display: flex; align-items: center; gap: 10px; }
+  .emotion-row-label { font-size: 11px; color: #a09880; width: 80px; }
+  .emotion-bar-wrap { flex: 1; height: 4px; background: #2a2820; border-radius: 2px; }
+  .emotion-bar { height: 100%; border-radius: 2px; transition: width 0.4s; }
+  .emotion-row-val { font-size: 10px; color: #504840; width: 30px; text-align: right; }
+
+
+  /* ── DAILY RECAP ── */
+  .recap-wrap { background: var(--white); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-top: 12px; }
+  .recap-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; }
+  .recap-header-left { display: flex; align-items: center; gap: 10px; }
+  .recap-header-title { font-size: 12px; font-weight: 600; color: var(--text); }
+  .recap-header-saved { font-size: 10px; color: var(--green); }
+  .recap-toggle-icon { font-size: 11px; color: var(--text3); transition: transform 0.2s; }
+  .recap-toggle-icon.open { transform: rotate(180deg); }
+  .recap-body { padding: 16px; display: none; }
+  .recap-body.open { display: block; animation: fadeUp 0.2s ease both; }
+  .recap-rating { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 16px; }
+  .recap-rating-btn { width: 32px; height: 32px; border-radius: 6px; border: 1.5px solid var(--line2); background: var(--s2); font-size: 11px; font-weight: 600; cursor: pointer; color: var(--text2); transition: all 0.15s; font-family: var(--sans); display: flex; align-items: center; justify-content: center; }
+  .recap-rating-btn:hover { border-color: var(--text2); }
+  .recap-rating-btn.sel-1, .recap-rating-btn.sel-2, .recap-rating-btn.sel-3 { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+  .recap-rating-btn.sel-4, .recap-rating-btn.sel-5, .recap-rating-btn.sel-6 { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); }
+  .recap-rating-btn.sel-7, .recap-rating-btn.sel-8 { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); }
+  .recap-rating-btn.sel-9, .recap-rating-btn.sel-10 { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+  .recap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .recap-q { display: flex; flex-direction: column; gap: 5px; }
+  .recap-q-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); }
+  .recap-textarea { background: var(--s2); border: 1px solid var(--line2); border-radius: 6px; padding: 9px 11px; font-family: var(--sans); font-size: 12px; color: var(--text); outline: none; resize: none; width: 100%; min-height: 72px; transition: border-color 0.15s; }
+  .recap-textarea:focus { border-color: var(--text); }
+  .recap-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+  .recap-last-saved { font-size: 10px; color: var(--text3); }
+
+
+  /* ── EQUITY CURVE ── */
+  .equity-wrap { background: var(--white); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .equity-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .equity-title { font-size: 12px; font-weight: 600; color: var(--text); }
+  .equity-meta { font-size: 11px; color: var(--text3); }
+  .equity-canvas-wrap { padding: 16px; }
+  canvas#equity-chart { width: 100%; height: 160px; display: block; }
+  .equity-empty { text-align: center; padding: 40px; font-size: 11px; color: var(--text3); }
+
+
+  /* ── AUDIO ── */
+  .audio-drop { border: 1.5px dashed var(--line2); border-radius: 8px; padding: 18px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--s2); }
+  .audio-drop:hover { border-color: var(--text2); background: var(--line); }
+  .audio-drop.dragover { border-color: var(--green); background: var(--green-bg); }
+  .audio-track-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .audio-track { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--s2); border: 1px solid var(--line); border-radius: 6px; font-size: 11px; color: var(--text2); }
+  .audio-track-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .audio-track-remove { font-size: 12px; color: var(--text3); cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: color 0.15s; }
+  .audio-track-remove:hover { color: var(--red); }
+  .audio-track-play { font-size: 11px; color: var(--text3); cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: color 0.15s; }
+  .audio-track-play:hover { color: var(--green); }
+  .win-flash { position: fixed; inset: 0; background: rgba(26,122,82,0.08); pointer-events: none; z-index: 500; opacity: 0; transition: opacity 0.4s; }
+  .win-flash.show { opacity: 1; }
+
 </style>
 </head>
 <body>
@@ -336,6 +418,7 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
     <div class="sb-item" onclick="nav('statistics',this)">Statistics</div>
     <div class="sb-item" onclick="nav('compliance',this)">Compliance</div>
     <div class="sb-section">Account</div>
+    <div class="sb-item" onclick="nav('review',this)">Weekly Review</div>
     <div class="sb-item" onclick="nav('settings',this)">Settings</div>
   </nav>
   <div class="sb-footer">
@@ -367,12 +450,21 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
       <div class="page-sub" id="dash-sub">—</div>
     </div>
     <div class="stat-ticker" id="stat-ticker"></div>
+    <div class="equity-wrap" id="equity-wrap">
+      <div class="equity-header">
+        <div class="equity-title">Cumulative R — Equity Curve</div>
+        <div class="equity-meta" id="equity-meta"></div>
+      </div>
+      <div class="equity-canvas-wrap">
+        <canvas id="equity-chart"></canvas>
+      </div>
+    </div>
     <div class="dash-rule" id="dash-rule">
       <div class="dash-rule-title">Session Status</div>
       <div class="dash-rule-text" id="dash-sess">Loading...</div>
     </div>
     <div class="grid-4">
-      <div class="stat-card"><div class="stat-label">Trades Today</div><div class="stat-val" id="d-today">0</div><div class="stat-change">Max 2 per day</div></div>
+      <div class="stat-card"><div class="stat-label">Trades Today</div><div class="stat-val" id="d-today">0</div><div class="stat-change">Max 3 · Stop after 2 consec losses</div></div>
       <div class="stat-card"><div class="stat-label">Today's Result</div><div class="stat-val" id="d-result">—</div><div class="stat-change" id="d-result-sub">—</div></div>
       <div class="stat-card"><div class="stat-label">Total Trades</div><div class="stat-val" id="d-total">0</div><div class="stat-change">All time</div></div>
       <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-val" id="d-wr">—</div><div class="stat-change">All time</div></div>
@@ -385,6 +477,39 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
       <div class="panel" style="flex:1">
         <div class="panel-header"><div class="panel-title">Today's Compliance</div></div>
         <div class="panel-body" id="dash-comp"></div>
+      </div>
+    </div>
+    <div class="recap-wrap" id="recap-wrap">
+      <div class="recap-header" onclick="toggleRecap()">
+        <div class="recap-header-left">
+          <div class="recap-header-title">📝 Daily Recap</div>
+          <div class="recap-header-saved" id="recap-saved-label"></div>
+        </div>
+        <div class="recap-toggle-icon" id="recap-icon">▼</div>
+      </div>
+      <div class="recap-body" id="recap-body">
+        <div style="margin-bottom:14px">
+          <div class="recap-q-label" style="margin-bottom:8px">Overall Feeling Today (1–10)</div>
+          <div class="recap-rating" id="recap-rating-btns"></div>
+        </div>
+        <div class="recap-grid">
+          <div class="recap-q">
+            <div class="recap-q-label">What did the market do today?</div>
+            <textarea class="recap-textarea" id="rc-market" placeholder="Trending, choppy, news-driven, rangebound..."></textarea>
+          </div>
+          <div class="recap-q">
+            <div class="recap-q-label">Did I follow my plan?</div>
+            <textarea class="recap-textarea" id="rc-plan" placeholder="What was your plan and did you stick to it?"></textarea>
+          </div>
+          <div class="recap-q">
+            <div class="recap-q-label">What I'd do differently</div>
+            <textarea class="recap-textarea" id="rc-different" placeholder="If you could replay today, what changes?"></textarea>
+          </div>
+        </div>
+        <div class="recap-actions">
+          <div class="recap-last-saved" id="recap-last-saved"></div>
+          <button class="btn btn-primary btn-sm" onclick="saveRecap()">Save Recap</button>
+        </div>
       </div>
     </div>
   </div>
@@ -524,6 +649,23 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
         <div class="lf-section-label">Notes & Screenshots</div>
         <div class="lf-row" style="margin-bottom:14px">
           <div class="lf-group" style="flex:1">
+            <div class="lf-label">Why did I take this trade? <span style="color:var(--red)">*</span></div>
+            <textarea class="lf-textarea" id="f-why" placeholder="Be specific. What exactly did you see that made you pull the trigger?"></textarea>
+          </div>
+          <div class="lf-group" style="flex:1">
+            <div class="lf-label">Emotional State</div>
+            <div class="btg" style="flex-wrap:wrap">
+              <button class="btt" data-g="emotion" data-v="Calm" onclick="pickToggle(this)">😌 Calm</button>
+              <button class="btt" data-g="emotion" data-v="Confident" onclick="pickToggle(this)">💪 Confident</button>
+              <button class="btt" data-g="emotion" data-v="FOMO" onclick="pickToggle(this)">😰 FOMO</button>
+              <button class="btt" data-g="emotion" data-v="Revenge" onclick="pickToggle(this)">😤 Revenge</button>
+              <button class="btt" data-g="emotion" data-v="Bored" onclick="pickToggle(this)">😑 Bored</button>
+              <button class="btt" data-g="emotion" data-v="Anxious" onclick="pickToggle(this)">😬 Anxious</button>
+            </div>
+          </div>
+        </div>
+        <div class="lf-row" style="margin-bottom:14px">
+          <div class="lf-group" style="flex:1">
             <div class="lf-label">Notes</div>
             <textarea class="lf-textarea" id="f-notes" placeholder="What went well? CVD lead, zone quality, execution timing..."></textarea>
           </div>
@@ -569,6 +711,52 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
       <div class="panel"><div class="panel-header"><div class="panel-title">Confluence Completion Rate</div></div><div class="panel-body" id="comp-conf"></div></div>
     </div>
     <div class="panel"><div class="panel-header"><div class="panel-title">Trades With Violations</div></div><div class="panel-body" id="comp-viol"></div></div>
+  </div>
+
+  <!-- REVIEW -->
+  <div class="page" id="page-review">
+    <div class="page-header"><div class="page-title">Weekly Review</div><div class="page-sub" id="review-sub">Reflect. Improve. Repeat.</div></div>
+    <div class="review-prompt" id="review-block">
+      <div class="review-prompt-title" id="review-title">This Week's Review</div>
+      <div class="review-prompt-sub" id="review-date-range">—</div>
+      <div class="review-stats" id="review-stats"></div>
+      <div class="review-q">
+        <div class="review-q-label">What did you do well this week?</div>
+        <textarea class="review-textarea" id="r-well" placeholder="Setups you read correctly, discipline moments, good entries..."></textarea>
+      </div>
+      <div class="review-q">
+        <div class="review-q-label">What patterns do you keep repeating that hurt you?</div>
+        <textarea class="review-textarea" id="r-patterns" placeholder="FOMO entries, ignoring CVD, sizing too big..."></textarea>
+      </div>
+      <div class="review-q">
+        <div class="review-q-label">What is your ONE focus for next week?</div>
+        <textarea class="review-textarea" id="r-focus" placeholder="One specific thing to improve. Not five. One."></textarea>
+      </div>
+      <div class="review-q">
+        <div class="review-q-label">Rate your discipline this week (1–10)</div>
+        <div class="btg" id="r-discipline-btg">
+          <button class="btt" data-g="discipline" data-v="1" onclick="pickToggle(this)">1</button>
+          <button class="btt" data-g="discipline" data-v="2" onclick="pickToggle(this)">2</button>
+          <button class="btt" data-g="discipline" data-v="3" onclick="pickToggle(this)">3</button>
+          <button class="btt" data-g="discipline" data-v="4" onclick="pickToggle(this)">4</button>
+          <button class="btt" data-g="discipline" data-v="5" onclick="pickToggle(this)">5</button>
+          <button class="btt" data-g="discipline" data-v="6" onclick="pickToggle(this)">6</button>
+          <button class="btt" data-g="discipline" data-v="7" onclick="pickToggle(this)">7</button>
+          <button class="btt" data-g="discipline" data-v="8" onclick="pickToggle(this)">8</button>
+          <button class="btt" data-g="discipline" data-v="9" onclick="pickToggle(this)">9</button>
+          <button class="btt" data-g="discipline" data-v="10" onclick="pickToggle(this)">10</button>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="saveReview()">Save Review</button>
+        <button class="btn btn-ghost" onclick="loadPastReview(-1)">← Last Week</button>
+        <button class="btn btn-ghost" onclick="loadPastReview(1)">This Week →</button>
+      </div>
+    </div>
+    <div class="panel" id="emotion-panel">
+      <div class="panel-header"><div class="panel-title">Emotion vs. Outcome</div></div>
+      <div class="panel-body" id="emotion-breakdown"></div>
+    </div>
   </div>
 
   <!-- SETTINGS -->
@@ -644,6 +832,21 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
         </div>
         <div style="font-size:10px;color:var(--text3)" id="export-count">—</div>
       </div>
+      <div class="setting-card" style="grid-column:1/-1">
+        <div class="setting-title">🎵 Win Sounds</div>
+        <div class="setting-sub">Upload audio clips that play on a winning trade. Multiple files = random pick each time. Fades in and out automatically.</div>
+        <div class="setting-row" style="margin-bottom:12px">
+          <span class="setting-label">Enable win sounds</span>
+          <button class="toggle" id="toggle-sound" onclick="toggleSound()"></button>
+        </div>
+        <div class="audio-drop" id="audio-drop" onclick="document.getElementById('f-audio').click()">
+          <input type="file" id="f-audio" multiple accept="audio/*" style="display:none" onchange="handleAudio(this)">
+          <div style="font-size:18px;margin-bottom:6px">🎵</div>
+          <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:3px">Drop audio files here or click to upload</div>
+          <div style="font-size:10.5px;color:var(--text3)">MP3, WAV, M4A — multiple files supported</div>
+        </div>
+        <div class="audio-track-list" id="audio-track-list"></div>
+      </div>
       <div class="setting-card" style="border-color:var(--red-mid)">
         <div class="setting-title" style="color:var(--red)">Danger Zone</div>
         <div class="setting-sub">Permanently delete all trades. Cannot be undone.</div>
@@ -669,11 +872,34 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="win-flash" id="win-flash"></div>
 
 <script>
 const SUPA_URL = 'https://najvjcciafmorqxsuhfi.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hanZqY2NpYWZtb3JxeHN1aGZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTcwNjAsImV4cCI6MjA4ODE3MzA2MH0.Zah3ounKNI_ww316dOBr39eLVlZN_G5TCq6nxghXSTs';
-const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+// Direct REST API - no library needed
+async function sbSelect(table, order) {
+  var url = SUPA_URL + '/rest/v1/' + table + '?select=*&order=' + (order||'created_at.desc');
+  var r = await fetch(url, { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return await r.json();
+}
+async function sbInsert(table, row) {
+  var url = SUPA_URL + '/rest/v1/' + table;
+  var r = await fetch(url, { method:'POST', headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(row) });
+  if (!r.ok) { var e = await r.json(); throw new Error(e.message || 'Insert failed'); }
+  return await r.json();
+}
+async function sbDelete(table, id) {
+  var url = SUPA_URL + '/rest/v1/' + table + '?id=eq.' + id;
+  var r = await fetch(url, { method:'DELETE', headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+}
+async function sbDeleteAll(table) {
+  var url = SUPA_URL + '/rest/v1/' + table + '?id=neq.0';
+  var r = await fetch(url, { method:'DELETE', headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+}
 
 var trades = [];
 var settings = {};
@@ -731,8 +957,9 @@ function setConn(state, sub) {
 async function testConn() {
   setConn('loading', 'Testing...');
   try {
-    var r = await sb.from('trades').select('id').limit(1);
-    if (r.error) throw r.error;
+    var url = SUPA_URL + '/rest/v1/trades?select=id&limit=1';
+    var r = await fetch(url, { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     setConn('ok', 'Supabase is reachable');
     toast('Connected', 'green');
   } catch(e) {
@@ -752,12 +979,10 @@ function updateSync() {
 async function loadTrades() {
   setConn('loading', 'Fetching trades...');
   try {
-    var r = await sb.from('trades').select('*').order('created_at', { ascending: false });
-    if (r.error) throw r.error;
-    trades = r.data || [];
+    trades = await sbSelect('trades', 'created_at.desc');
     lastSync = new Date();
     updateSync();
-    setConn('ok', 'Supabase · ' + trades.length + ' trades loaded');
+    setConn('ok', 'Connected · ' + trades.length + ' trades');
     renderAll();
   } catch(e) {
     setConn('err', e.message);
@@ -770,7 +995,9 @@ async function saveTrade() {
   var date = document.getElementById('f-date').value;
   var direction = getToggle('direction');
   var outcome = getToggle('outcome');
+  var why = document.getElementById('f-why').value.trim();
   if (!date || !direction || !outcome) { toast('Date, direction and outcome required', 'red'); return; }
+  if (!why) { toast('Please explain why you took this trade', 'red'); document.getElementById('f-why').focus(); return; }
 
   var vp = getToggle('vp') === 'Yes';
   var bm = getToggle('bookmap') === 'Yes';
@@ -803,19 +1030,22 @@ async function saveTrade() {
     stop_pts: stopVal,
     risk_usd: riskVal,
     r_result: rVal,
-    pnl_usd: pnlVal
+    pnl_usd: pnlVal,
+    emotion: getToggle('emotion') || '',
+    why_taken: why
   };
 
   var btn = document.getElementById('save-btn');
   btn.textContent = 'Saving...'; btn.disabled = true;
 
   try {
-    var r = await sb.from('trades').insert([trade]).select();
-    if (r.error) throw r.error;
-    trades.unshift(r.data[0]);
+    var inserted = await sbInsert('trades', trade);
+    var newTrade = Array.isArray(inserted) ? inserted[0] : inserted;
+    trades.unshift(newTrade);
     lastSync = new Date(); updateSync();
     clearForm();
     nav('log', document.querySelectorAll('.sb-item')[2]);
+    if (trade.outcome === 'Win') playWinSound();
     toast('Trade saved', 'green');
   } catch(e) {
     toast('Save failed: ' + e.message, 'red');
@@ -826,8 +1056,7 @@ async function saveTrade() {
 async function deleteTrade(id) {
   if (!confirm('Delete this trade?')) return;
   try {
-    var r = await sb.from('trades').delete().eq('id', id);
-    if (r.error) throw r.error;
+    await sbDelete('trades', id);
     trades = trades.filter(function(t) { return t.id !== id; });
     lastSync = new Date(); updateSync();
     closeModal(); renderAll();
@@ -839,8 +1068,7 @@ async function clearAll() {
   if (!confirm('Delete ALL trades permanently?')) return;
   if (!confirm('Are you absolutely sure?')) return;
   try {
-    var r = await sb.from('trades').delete().neq('id', 0);
-    if (r.error) throw r.error;
+    await sbDeleteAll('trades');
     trades = []; renderAll(); toast('All trades cleared');
   } catch(e) { toast('Error: ' + e.message, 'red'); }
 }
@@ -967,6 +1195,7 @@ function nav(page, el) {
   if (page === 'dashboard') renderDashboard();
   if (page === 'log') renderLog();
   if (page === 'settings') { renderSettingsPage(); }
+  if (page === 'review') { renderReview(); }
   if (page === 'new') { setTimeout(setupDrop, 50); }
 }
 
@@ -1048,7 +1277,7 @@ function renderTicker() {
   var wrCls = wr>=55?'green':wr!==null&&wr<45?'red':'amber';
 
   var items = [
-    {label:'Today's R', val:todayTrades.length?todayRStr:(todayW+'W / '+todayL+'L'?'0.0R':'—'), cls:todayRCls, sub:todayW+'W / '+todayL+'L', accent:'#3b6fd4'},
+    {label:"Today's R", val:todayTrades.length?todayRStr:(todayW+'W / '+todayL+'L'?'0.0R':'—'), cls:todayRCls, sub:todayW+'W / '+todayL+'L', accent:'#3b6fd4'},
     {label:'Win Rate', val:wrStr, cls:wrCls, sub:(allWins.length+allLosses.length)+' trades', accent:'#c89840'},
     {label:'Avg R / Trade', val:avgRStr, cls:avgRCls, sub:rTrades.length+' trades w/ R logged', accent:'#9060d0'},
     {label:'Avg Stop', val:avgStopStr, cls:'', sub:stopTrades.length+' trades w/ stop', accent:'#2a8a60'},
@@ -1069,6 +1298,7 @@ function renderTicker() {
 // ── DASHBOARD ──
 function renderDashboard() {
   renderTicker();
+  renderEquity();
   var today = todayStr();
   var todayTrades = trades.filter(function(t) { return t.date === today; });
   var wins = trades.filter(function(t) { return t.outcome==='Win'; }).length;
@@ -1092,7 +1322,7 @@ function renderDashboard() {
   var tl=todayTrades.filter(function(t){return t.outcome==='Loss';}).length;
   var re=document.getElementById('d-result'); var rs=document.getElementById('d-result-sub');
   if (!todayTrades.length){if(re){re.textContent='—';re.className='stat-val';}if(rs)rs.textContent='No trades today';}
-  else if(tl>=2){if(re){re.textContent='Stop';re.className='stat-val red';}if(rs)rs.textContent='2 losses — session over';}
+  else if(tl>=2){if(re){re.textContent='Stop';re.className='stat-val red';}if(rs)rs.textContent='2 consecutive losses — session over';}
   else if(tw>tl){if(re){re.textContent='Positive';re.className='stat-val green';}if(rs)rs.textContent=tw+'W / '+tl+'L today';}
   else if(tl>tw){if(re){re.textContent='Negative';re.className='stat-val red';}if(rs)rs.textContent=tw+'W / '+tl+'L today';}
   else{if(re){re.textContent='Flat';re.className='stat-val amber';}if(rs)rs.textContent='Break even today';}
@@ -1120,6 +1350,16 @@ function ruleHTML(r) {
   return '<div class="rule-row"><div class="rule-dot ' + (r.pass?'pass':r.warn?'warn':'fail') + '"></div><div class="rule-text">' + r.label + '</div><div class="rule-note">' + r.note + '</div></div>';
 }
 
+function consecutiveLosses(ts) {
+  // Count consecutive losses from most recent trade
+  var count = 0;
+  for (var i = 0; i < ts.length; i++) {
+    if (ts[i].outcome === 'Loss') count++;
+    else if (ts[i].outcome === 'Win') break;
+  }
+  return count;
+}
+
 function buildRules(ts) {
   if (!ts.length) return [];
   function pct(key) { return Math.round(ts.filter(function(t){return (t.confluences||{})[key];}).length/ts.length*100); }
@@ -1131,7 +1371,7 @@ function buildRules(ts) {
     {label:'Bookmap stack confirmed', note:pct('Bookmap Stack')+'%', pass:pct('Bookmap Stack')===100, warn:pct('Bookmap Stack')>=80},
     {label:'CVD divergence confirmed', note:pct('CVD Divergence')+'%', pass:pct('CVD Divergence')===100, warn:pct('CVD Divergence')>=80},
     {label:'Target set before entry', note:pct('Target Set')+'%', pass:pct('Target Set')===100, warn:pct('Target Set')>=80},
-    {label:'Max 2 trades per day', note:maxDay<=2?'Pass':maxDay+' in one day', pass:maxDay<=2, warn:false},
+    {label:'Max 2 trades per day', note:maxDay<=3?'Pass':maxDay+' trades in one day', pass:maxDay<=3, warn:false},
   ];
 }
 
@@ -1156,12 +1396,13 @@ function renderLog() {
         '<span class="dir-badge ' + dirClass(t.direction) + '">' + t.direction + '</span>' +
         '<span class="tc-meta">' + fDate(t.date) + '</span>' +
         (t.poi ? '<span class="poi-tag">' + t.poi + '</span>' : '') +
+        (t.emotion ? '<span class="emotion-badge emotion-' + t.emotion.toLowerCase() + '">' + t.emotion + '</span>' : '') +
         '<span class="outcome-badge ' + outcomeClass(t.outcome) + '" style="margin-left:auto">' + t.outcome + '</span>' +
       '</div>' +
       '<div class="tc-body">' +
         '<div class="tcb"><div class="tcb-label">Confluences</div><div class="conf-pills">' + (confs || '<span style="font-size:11px;color:var(--text3)">None</span>') + '</div></div>' +
         (t.r_result!=null ? '<div class="tcb"><div class="tcb-label">R Result</div><div class="tcb-val" style="font-weight:600;color:'+(t.r_result>0?'var(--green)':t.r_result<0?'var(--red)':'var(--text3)')+';">'+(t.r_result>0?'+':'')+t.r_result+'R</div></div>' : '') +
-        (t.pnl_usd!=null ? '<div class="tcb"><div class="tcb-label">P&L</div><div class="tcb-val" style="font-weight:600;color:'+(t.pnl_usd>0?'var(--green)':t.pnl_usd<0?'var(--red)':'var(--text3)')+';">'+(t.pnl_usd>0?'$+':'$')+t.pnl_usd+'</div></div>' : '') +
+        (t.pnl_usd!=null ? '<div class="tcb"><div class="tcb-label">P&#38;L</div><div class="tcb-val" style="font-weight:600;color:'+(t.pnl_usd>0?'var(--green)':t.pnl_usd<0?'var(--red)':'var(--text3)')+';">'+(t.pnl_usd>0?'$+':'$')+t.pnl_usd+'</div></div>' : '') +
         (t.mistakes ? '<div class="tcb"><div class="tcb-label">Mistake</div><div class="tcb-val">' + t.mistakes.slice(0,70) + (t.mistakes.length>70?'...':'') + '</div></div>' : '') +
       '</div>' +
     '</div>';
@@ -1278,6 +1519,7 @@ function renderCompliance() {
 
 // ── SETTINGS PAGE ──
 function renderSettingsPage() {
+  loadAudioSettings();
   var ec=document.getElementById('export-count'); if(ec)ec.textContent=trades.length+' trades available to export';
   applySettings();
 }
@@ -1302,6 +1544,8 @@ function openModal(id) {
         (t.poi?'<span class="poi-tag">'+t.poi+'</span>':'')+
       '</div></div>'+
       '<div><div class="modal-section-title">Confluences</div>'+confHTML+'</div>'+
+      (t.why_taken?'<div><div class="modal-section-title">Why I Took This Trade</div><div class="modal-text" style="color:var(--blue)">'+t.why_taken+'</div></div>':'')+
+      (t.emotion?'<div><div class="modal-section-title">Emotional State</div><div><span class="emotion-badge emotion-'+t.emotion.toLowerCase()+'">'+t.emotion+'</span></div></div>':'')+
       (t.notes?'<div><div class="modal-section-title">Notes</div><div class="modal-text">'+t.notes+'</div></div>':'')+
       (t.mistakes?'<div><div class="modal-section-title">Mistakes</div><div class="modal-text" style="color:var(--red)">'+t.mistakes+'</div></div>':'');
   }
@@ -1319,6 +1563,446 @@ function toast(msg, type) {
   el.className='toast '+(type||'')+' show';
   clearTimeout(toastTimer);
   toastTimer=setTimeout(function(){el.classList.remove('show');},2800);
+}
+
+
+
+
+// ── EQUITY CURVE ──
+function renderEquity() {
+  var canvas = document.getElementById('equity-chart');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  // Get trades with R values, sorted oldest first
+  var rTrades = trades.filter(function(t) { return t.r_result != null; })
+    .slice().reverse();
+
+  if (rTrades.length < 2) {
+    canvas.style.display = 'none';
+    var wrap = canvas.parentElement;
+    if (wrap && !document.getElementById('equity-empty-msg')) {
+      var msg = document.createElement('div');
+      msg.id = 'equity-empty-msg';
+      msg.className = 'equity-empty';
+      msg.textContent = 'Log at least 2 trades with R values to see your equity curve';
+      wrap.appendChild(msg);
+    }
+    var meta = document.getElementById('equity-meta');
+    if (meta) meta.textContent = '';
+    return;
+  }
+
+  // Remove empty message if exists
+  var emptyMsg = document.getElementById('equity-empty-msg');
+  if (emptyMsg) emptyMsg.remove();
+  canvas.style.display = 'block';
+
+  // Build cumulative R array
+  var cumR = [];
+  var running = 0;
+  cumR.push(0);
+  for (var i = 0; i < rTrades.length; i++) {
+    running += rTrades[i].r_result;
+    cumR.push(Math.round(running * 100) / 100);
+  }
+
+  var totalR = cumR[cumR.length - 1];
+  var maxR = Math.max.apply(null, cumR);
+  var minR = Math.min.apply(null, cumR);
+  var meta = document.getElementById('equity-meta');
+  if (meta) meta.textContent = (totalR >= 0 ? '+' : '') + totalR.toFixed(2) + 'R total · ' + rTrades.length + ' trades';
+
+  // Size canvas
+  var dpr = window.devicePixelRatio || 1;
+  var rect = canvas.parentElement.getBoundingClientRect();
+  var W = rect.width - 32;
+  var H = 160;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  // Colors
+  var isDark = document.body.classList.contains('dark');
+  var lineColor = totalR >= 0 ? '#1a7a52' : '#b84040';
+  var fillColor = totalR >= 0 ? 'rgba(26,122,82,0.08)' : 'rgba(184,64,64,0.08)';
+  var gridColor = isDark ? '#2a2720' : '#e4e0d8';
+  var textColor = isDark ? '#504840' : '#a09890';
+  var zeroColor = isDark ? '#3a3630' : '#d4cfc5';
+
+  var pad = { top: 12, right: 16, bottom: 24, left: 40 };
+  var chartW = W - pad.left - pad.right;
+  var chartH = H - pad.top - pad.bottom;
+
+  // Scale
+  var range = maxR - minR || 1;
+  var scaleY = function(v) { return pad.top + chartH - ((v - minR) / range) * chartH; };
+  var scaleX = function(i) { return pad.left + (i / (cumR.length - 1)) * chartW; };
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 1;
+  for (var g = 0; g <= 4; g++) {
+    var gy = pad.top + (g / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(W - pad.right, gy); ctx.stroke();
+    var gv = maxR - (g / 4) * range;
+    ctx.fillStyle = textColor;
+    ctx.font = '9px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText((gv >= 0 ? '+' : '') + gv.toFixed(1) + 'R', pad.left - 4, gy + 3);
+  }
+
+  // Zero line
+  if (minR < 0 && maxR > 0) {
+    var zy = scaleY(0);
+    ctx.strokeStyle = zeroColor;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(pad.left, zy); ctx.lineTo(W - pad.right, zy); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Fill area
+  ctx.beginPath();
+  ctx.moveTo(scaleX(0), scaleY(cumR[0]));
+  for (var i = 1; i < cumR.length; i++) {
+    ctx.lineTo(scaleX(i), scaleY(cumR[i]));
+  }
+  ctx.lineTo(scaleX(cumR.length - 1), pad.top + chartH);
+  ctx.lineTo(scaleX(0), pad.top + chartH);
+  ctx.closePath();
+  ctx.fillStyle = fillColor;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(scaleX(0), scaleY(cumR[0]));
+  for (var i = 1; i < cumR.length; i++) {
+    ctx.lineTo(scaleX(i), scaleY(cumR[i]));
+  }
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // Dots on each trade
+  for (var i = 0; i < cumR.length; i++) {
+    var dotColor = i === 0 ? gridColor : (rTrades[i-1] && rTrades[i-1].r_result > 0 ? '#1a7a52' : rTrades[i-1] && rTrades[i-1].r_result < 0 ? '#b84040' : '#9a6820');
+    ctx.beginPath();
+    ctx.arc(scaleX(i), scaleY(cumR[i]), 3, 0, Math.PI * 2);
+    ctx.fillStyle = dotColor;
+    ctx.fill();
+    ctx.strokeStyle = isDark ? '#181614' : '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+}
+
+// ── DAILY RECAP ──
+function recapKey(dateStr) { return 'recap_' + (dateStr || todayStr()); }
+
+function toggleRecap() {
+  var body = document.getElementById('recap-body');
+  var icon = document.getElementById('recap-icon');
+  if (!body) return;
+  var isOpen = body.classList.toggle('open');
+  if (icon) icon.classList.toggle('open', isOpen);
+  if (isOpen) loadRecap(todayStr());
+}
+
+function loadRecap(dateStr) {
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem(recapKey(dateStr))); } catch(e) {}
+
+  // Build rating buttons
+  var rb = document.getElementById('recap-rating-btns');
+  if (rb) {
+    rb.innerHTML = '';
+    for (var i = 1; i <= 10; i++) {
+      var btn = document.createElement('button');
+      btn.className = 'recap-rating-btn' + (saved && saved.rating == i ? ' sel-' + i : '');
+      btn.textContent = i;
+      btn.setAttribute('data-val', i);
+      btn.onclick = (function(val, el) {
+        return function() {
+          document.querySelectorAll('.recap-rating-btn').forEach(function(b) {
+            b.className = 'recap-rating-btn';
+          });
+          el.className = 'recap-rating-btn sel-' + val;
+        };
+      })(i, btn);
+      rb.appendChild(btn);
+    }
+  }
+
+  var rcm = document.getElementById('rc-market'); if (rcm) rcm.value = saved ? saved.market || '' : '';
+  var rcp = document.getElementById('rc-plan'); if (rcp) rcp.value = saved ? saved.plan || '' : '';
+  var rcd = document.getElementById('rc-different'); if (rcd) rcd.value = saved ? saved.different || '' : '';
+
+  var lbl = document.getElementById('recap-last-saved');
+  if (lbl) lbl.textContent = saved && saved.saved ? 'Last saved ' + new Date(saved.saved).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '';
+  var sl = document.getElementById('recap-saved-label');
+  if (sl) sl.textContent = saved ? '✓ Saved' : '';
+}
+
+function saveRecap() {
+  var ratingBtn = document.querySelector('.recap-rating-btn[class*="sel-"]');
+  var rating = ratingBtn ? ratingBtn.getAttribute('data-val') : null;
+  var data = {
+    rating: rating,
+    market: (document.getElementById('rc-market') || {}).value || '',
+    plan: (document.getElementById('rc-plan') || {}).value || '',
+    different: (document.getElementById('rc-different') || {}).value || '',
+    saved: new Date().toISOString()
+  };
+  localStorage.setItem(recapKey(todayStr()), JSON.stringify(data));
+  var lbl = document.getElementById('recap-last-saved');
+  if (lbl) lbl.textContent = 'Last saved ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  var sl = document.getElementById('recap-saved-label');
+  if (sl) sl.textContent = '✓ Saved';
+  toast('Recap saved', 'green');
+}
+
+
+// ── WIN AUDIO ──
+var audioTracks = []; // Array of {name, dataUrl}
+var currentAudio = null;
+var fadeOutTimer = null;
+
+function loadAudioSettings() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('atj_audio') || '[]');
+    audioTracks = saved;
+    renderAudioList();
+  } catch(e) { audioTracks = []; }
+  var soundOn = localStorage.getItem('atj_sound') !== 'off';
+  var btn = document.getElementById('toggle-sound');
+  if (btn) btn.classList.toggle('on', soundOn);
+}
+
+function toggleSound() {
+  var soundOn = localStorage.getItem('atj_sound') !== 'off';
+  localStorage.setItem('atj_sound', soundOn ? 'off' : 'on');
+  var btn = document.getElementById('toggle-sound');
+  if (btn) btn.classList.toggle('on', !soundOn);
+}
+
+function handleAudio(input) {
+  var files = Array.from(input.files);
+  var pending = files.length;
+  if (!pending) return;
+  files.forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      audioTracks.push({ name: file.name, dataUrl: e.target.result });
+      pending--;
+      if (pending === 0) {
+        saveAudioSettings();
+        renderAudioList();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function saveAudioSettings() {
+  try { localStorage.setItem('atj_audio', JSON.stringify(audioTracks)); } catch(e) {
+    toast('Audio files too large to save locally', 'red');
+  }
+}
+
+function renderAudioList() {
+  var list = document.getElementById('audio-track-list');
+  if (!list) return;
+  if (!audioTracks.length) { list.innerHTML = ''; return; }
+  list.innerHTML = '<div class="audio-track-list">' + audioTracks.map(function(t, i) {
+    return '<div class="audio-track">' +
+      '<span class="audio-track-play" onclick="previewTrack(' + i + ')" title="Preview">▶</span>' +
+      '<span class="audio-track-name">' + t.name + '</span>' +
+      '<span class="audio-track-remove" onclick="removeTrack(' + i + ')" title="Remove">✕</span>' +
+    '</div>';
+  }).join('') + '</div>';
+}
+
+function previewTrack(idx) {
+  stopWinAudio();
+  if (!audioTracks[idx]) return;
+  var audio = new Audio(audioTracks[idx].dataUrl);
+  audio.volume = 0;
+  audio.play().then(function() {
+    fadeAudioIn(audio, 0.8, 600);
+    setTimeout(function() { fadeAudioOut(audio, 1500); }, 4000);
+  }).catch(function(){});
+  currentAudio = audio;
+}
+
+function removeTrack(idx) {
+  audioTracks.splice(idx, 1);
+  saveAudioSettings();
+  renderAudioList();
+}
+
+function playWinSound() {
+  if (localStorage.getItem('atj_sound') === 'off') return;
+  if (!audioTracks.length) return;
+  var track = audioTracks[Math.floor(Math.random() * audioTracks.length)];
+  stopWinAudio();
+
+  // Flash the screen green
+  var flash = document.getElementById('win-flash');
+  if (flash) {
+    flash.classList.add('show');
+    setTimeout(function() { flash.classList.remove('show'); }, 600);
+  }
+
+  var audio = new Audio(track.dataUrl);
+  audio.volume = 0;
+  currentAudio = audio;
+  audio.play().then(function() {
+    fadeAudioIn(audio, 0.85, 800);
+    // Fade out after 8 seconds
+    fadeOutTimer = setTimeout(function() {
+      fadeAudioOut(audio, 2000);
+    }, 8000);
+  }).catch(function(){});
+}
+
+function stopWinAudio() {
+  if (fadeOutTimer) { clearTimeout(fadeOutTimer); fadeOutTimer = null; }
+  if (currentAudio) {
+    fadeAudioOut(currentAudio, 400);
+    currentAudio = null;
+  }
+}
+
+function fadeAudioIn(audio, targetVol, duration) {
+  var steps = 20;
+  var stepTime = duration / steps;
+  var stepVol = targetVol / steps;
+  var i = 0;
+  var interval = setInterval(function() {
+    i++;
+    audio.volume = Math.min(targetVol, stepVol * i);
+    if (i >= steps) clearInterval(interval);
+  }, stepTime);
+}
+
+function fadeAudioOut(audio, duration) {
+  var startVol = audio.volume;
+  var steps = 20;
+  var stepTime = duration / steps;
+  var stepVol = startVol / steps;
+  var i = 0;
+  var interval = setInterval(function() {
+    i++;
+    audio.volume = Math.max(0, startVol - stepVol * i);
+    if (i >= steps) {
+      clearInterval(interval);
+      try { audio.pause(); audio.currentTime = 0; } catch(e) {}
+    }
+  }, stepTime);
+}
+
+// ── REVIEW ──
+var reviewWeekOffset = 0;
+
+function getWeekRange(offset) {
+  var now = new Date();
+  var day = now.getDay();
+  var monday = new Date(now);
+  monday.setDate(now.getDate() - (day===0?6:day-1) + (offset*7));
+  monday.setHours(0,0,0,0);
+  var sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return { start: monday, end: sunday };
+}
+
+function weekKey(offset) {
+  var r = getWeekRange(offset);
+  return 'review_' + r.start.toISOString().split('T')[0];
+}
+
+function saveReview() {
+  var key = weekKey(reviewWeekOffset);
+  var data = {
+    well: document.getElementById('r-well').value,
+    patterns: document.getElementById('r-patterns').value,
+    focus: document.getElementById('r-focus').value,
+    discipline: getToggle('discipline'),
+    saved: new Date().toISOString()
+  };
+  localStorage.setItem(key, JSON.stringify(data));
+  toast('Review saved', 'green');
+}
+
+function loadPastReview(dir) {
+  reviewWeekOffset += dir;
+  renderReview();
+}
+
+function renderReview() {
+  var range = getWeekRange(reviewWeekOffset);
+  var startStr = range.start.toISOString().split('T')[0];
+  var endStr = range.end.toISOString().split('T')[0];
+  var label = reviewWeekOffset === 0 ? 'This Week' : reviewWeekOffset === -1 ? 'Last Week' : reviewWeekOffset < 0 ? Math.abs(reviewWeekOffset) + ' Weeks Ago' : 'Future';
+  var el = document.getElementById('review-title'); if(el) el.textContent = label + "'s Review";
+  var dr = document.getElementById('review-date-range'); if(dr) dr.textContent = fDate(startStr) + ' — ' + fDate(endStr);
+
+  // Week trades
+  var weekTrades = trades.filter(function(t) { return t.date >= startStr && t.date <= endStr; });
+  var wins = weekTrades.filter(function(t){return t.outcome==='Win';}).length;
+  var losses = weekTrades.filter(function(t){return t.outcome==='Loss';}).length;
+  var weekR = weekTrades.reduce(function(a,t){return a+(t.r_result||0);},0);
+  var wr = (wins+losses)>0?Math.round(wins/(wins+losses)*100):null;
+
+  var rs = document.getElementById('review-stats');
+  if(rs) rs.innerHTML =
+    '<div class="review-stat"><div class="review-stat-label">Trades</div><div class="review-stat-val">' + weekTrades.length + '</div></div>' +
+    '<div class="review-stat"><div class="review-stat-label">Win Rate</div><div class="review-stat-val ' + (wr>=50?'green':wr!==null?'red':'') + '">' + (wr!==null?wr+'%':'—') + '</div></div>' +
+    '<div class="review-stat"><div class="review-stat-label">Total R</div><div class="review-stat-val ' + (weekR>0?'green':weekR<0?'red':'') + '">' + (weekR!==0?(weekR>0?'+':'')+weekR.toFixed(1)+'R':'—') + '</div></div>';
+
+  // Load saved review
+  var key = weekKey(reviewWeekOffset);
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem(key)); } catch(e) {}
+  document.getElementById('r-well').value = saved ? saved.well||'' : '';
+  document.getElementById('r-patterns').value = saved ? saved.patterns||'' : '';
+  document.getElementById('r-focus').value = saved ? saved.focus||'' : '';
+  document.querySelectorAll('.btt[data-g="discipline"]').forEach(function(b){b.className='btt';});
+  if(saved && saved.discipline) {
+    var db = document.querySelector('.btt[data-g="discipline"][data-v="'+saved.discipline+'"]');
+    if(db) db.className = 'btt sel-default';
+  }
+
+  // Emotion breakdown
+  var emotions = ['Calm','Confident','FOMO','Revenge','Bored','Anxious'];
+  var colors = {'Calm':'var(--green)','Confident':'var(--blue)','FOMO':'var(--amber)','Revenge':'var(--red)','Bored':'var(--text3)','Anxious':'#6040a0'};
+  var allEmotionTrades = trades.filter(function(t){return t.emotion;});
+  var eb = document.getElementById('emotion-breakdown');
+  if(eb) {
+    if(!allEmotionTrades.length) {
+      eb.innerHTML = '<div style="font-size:11px;color:var(--text3)">No emotion data yet — start tagging your trades.</div>';
+    } else {
+      eb.innerHTML = '<div class="emotion-breakdown">' + emotions.map(function(e) {
+        var eTrades = allEmotionTrades.filter(function(t){return t.emotion===e;});
+        var eWins = eTrades.filter(function(t){return t.outcome==='Win';}).length;
+        var eLosses = eTrades.filter(function(t){return t.outcome==='Loss';}).length;
+        var eWr = (eWins+eLosses)>0?Math.round(eWins/(eWins+eLosses)*100):null;
+        var pct = allEmotionTrades.length>0?Math.round(eTrades.length/allEmotionTrades.length*100):0;
+        return '<div class="emotion-row">' +
+          '<div class="emotion-row-label">' + e + '</div>' +
+          '<div class="emotion-bar-wrap"><div class="emotion-bar" style="width:'+pct+'%;background:'+(colors[e]||'var(--text3)')+'"></div></div>' +
+          '<div class="emotion-row-val">' + eTrades.length + '</div>' +
+          '<div style="font-size:10px;color:var(--text3);min-width:50px;text-align:right">' + (eWr!==null?eWr+'% WR':'—') + '</div>' +
+        '</div>';
+      }).join('') + '</div>';
+    }
+  }
 }
 
 function renderAll(){renderDashboard();renderLog();}
