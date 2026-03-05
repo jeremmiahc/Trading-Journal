@@ -2762,7 +2762,7 @@ function buildDailyHtml(dateStr) {
       var bc = s.outcome==='Win'?'win':s.outcome==='Loss'?'loss':'be';
       var rc = s.r!=null?(s.r>0?'pos':s.r<0?'neg':'be'):'be';
       var rs = s.r!=null?(s.r>0?'+':'')+s.r+'R':'';
-      return '<div class="pdc-ss"><img src="'+s.url+'" loading="lazy"><div class="pdc-ss-badge '+bc+'">'+s.outcome+'</div>'+(rs?'<div class="pdc-ss-r '+rc+'">'+rs+'</div>':'')+'</div>';
+      return '<div class="pdc-ss" style="transform-style:preserve-3d;transition:transform 0.1s ease;border-radius:8px;overflow:hidden" onmousemove="tiltCard(event,this)" onmouseleave="resetTilt(this)" onclick="event.stopPropagation()"><img src="'+s.url+'" loading="lazy"><div class="pdc-ss-badge '+bc+'">'+s.outcome+'</div>'+(rs?'<div class="pdc-ss-r '+rc+'">'+rs+'</div>':'')+'</div>';
     }).join('') + '</div>';
     if (shots.length>2) ssHtml += '<div class="pdc-scroll-hint">← swipe →</div>';
   }
