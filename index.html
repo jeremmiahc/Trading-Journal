@@ -585,12 +585,13 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
 
 
   /* ── PNL CARD FEED ── */
-  .pnlc-feed { display:flex; flex-direction:column; gap:20px; padding-bottom:40px; }
-  .pnlc-feed-item { cursor:pointer; border-radius:14px; will-change:transform; transition:box-shadow 0.15s ease; }
-  .pnlc-feed-item:hover { box-shadow:0 20px 60px rgba(0,0,0,0.35); }
+  .pnlc-feed { display:flex; flex-direction:column; gap:28px; padding-bottom:40px; max-width:480px; }
+  .pnlc-feed-item { cursor:pointer; border-radius:14px; will-change:transform; transition:box-shadow 0.15s ease; transform-style:preserve-3d; }
+  .pnlc-feed-item:hover { box-shadow:0 24px 60px rgba(0,0,0,0.4); }
+  .pnl-daily-card, .pnl-weekly-card { width:100%; }
   .pnlc-lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:500; align-items:center; justify-content:center; padding:24px; cursor:zoom-out; backdrop-filter:blur(8px); }
   .pnlc-lightbox.open { display:flex; }
-  .pnlc-lightbox-inner { max-width:580px; width:100%; cursor:default; animation:fadeUp 0.25s cubic-bezier(0.22,1,0.36,1) both; }
+  .pnlc-lightbox-inner { max-width:640px; width:100%; cursor:default; animation:fadeUp 0.25s cubic-bezier(0.22,1,0.36,1) both; transform:scale(1); }
   .pnlc-lightbox-close { position:absolute; top:20px; right:24px; font-size:26px; color:#fff; cursor:pointer; opacity:0.5; line-height:1; }
   .pnlc-lightbox-close:hover { opacity:1; }
   .pnlc-lightbox-share { display:flex; gap:10px; margin-top:14px; justify-content:center; }
@@ -2702,14 +2703,14 @@ function renderWeeklyFeed() {
 
 function tiltCard(e, el) {
   var r = el.getBoundingClientRect();
-  var rotX = (((e.clientY - r.top) / r.height) - 0.5) * -10;
-  var rotY = (((e.clientX - r.left) / r.width) - 0.5) * 10;
-  el.style.transform = 'perspective(900px) rotateX('+rotX+'deg) rotateY('+rotY+'deg) scale(1.015)';
+  var rotX = (((e.clientY - r.top) / r.height) - 0.5) * -14;
+  var rotY = (((e.clientX - r.left) / r.width) - 0.5) * 14;
+  el.style.transition = 'transform 0.08s ease';
+  el.style.transform = 'perspective(700px) rotateX('+rotX+'deg) rotateY('+rotY+'deg) scale(1.03)';
 }
 function resetTilt(el) {
-  el.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) scale(1)';
-  el.style.transition = 'transform 0.4s ease, box-shadow 0.15s ease';
-  setTimeout(function(){ el.style.transition = 'box-shadow 0.15s ease'; }, 400);
+  el.style.transition = 'transform 0.5s cubic-bezier(0.22,1,0.36,1), box-shadow 0.15s ease';
+  el.style.transform = 'perspective(700px) rotateX(0deg) rotateY(0deg) scale(1)';
 }
 
 function openPnlLb(type, dateStr) {
@@ -2762,7 +2763,7 @@ function buildDailyHtml(dateStr) {
       var bc = s.outcome==='Win'?'win':s.outcome==='Loss'?'loss':'be';
       var rc = s.r!=null?(s.r>0?'pos':s.r<0?'neg':'be'):'be';
       var rs = s.r!=null?(s.r>0?'+':'')+s.r+'R':'';
-      return '<div class="pdc-ss" style="transform-style:preserve-3d;transition:transform 0.1s ease;border-radius:8px;overflow:hidden" onmousemove="tiltCard(event,this)" onmouseleave="resetTilt(this)" onclick="event.stopPropagation()"><img src="'+s.url+'" loading="lazy"><div class="pdc-ss-badge '+bc+'">'+s.outcome+'</div>'+(rs?'<div class="pdc-ss-r '+rc+'">'+rs+'</div>':'')+'</div>';
+      return '<div class="pdc-ss" style="transform-style:preserve-3d;transition:transform 0.1s ease;border-radius:8px;overflow:hidden" onclick="event.stopPropagation()"><img src="'+s.url+'" loading="lazy"><div class="pdc-ss-badge '+bc+'">'+s.outcome+'</div>'+(rs?'<div class="pdc-ss-r '+rc+'">'+rs+'</div>':'')+'</div>';
     }).join('') + '</div>';
     if (shots.length>2) ssHtml += '<div class="pdc-scroll-hint">← swipe →</div>';
   }
