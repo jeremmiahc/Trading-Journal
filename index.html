@@ -588,8 +588,9 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
   .pnlc-feed { display:flex; flex-direction:column; gap:28px; padding-bottom:40px; max-width:480px; }
   .pnlc-feed-item { cursor:pointer; border-radius:14px; will-change:transform; transition:box-shadow 0.15s ease; transform-style:preserve-3d; }
   .pnlc-feed-item:hover { box-shadow:0 24px 60px rgba(0,0,0,0.4); }
-  .pnl-daily-card, .pnl-weekly-card { width:100%; pointer-events:none; }
-  .pnlc-feed-item .pdc-ss img { pointer-events:none; }
+  .pnl-daily-card, .pnl-weekly-card { width:100%; }
+  .pdc-scroll { pointer-events:auto !important; touch-action:pan-x; cursor:grab; }
+  .pdc-scroll:active { cursor:grabbing; }
   .pnlc-lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:500; align-items:center; justify-content:center; padding:24px; cursor:zoom-out; backdrop-filter:blur(8px); }
   .pnlc-lightbox.open { display:flex; }
   .pnlc-lightbox-inner { max-width:640px; width:100%; cursor:default; animation:fadeUp 0.25s cubic-bezier(0.22,1,0.36,1) both; transform:scale(1); }
@@ -2692,7 +2693,15 @@ function renderDailyFeed() {
   });
   feed.innerHTML = html;
   feed.querySelectorAll('.pnlc-feed-item').forEach(function(el) {
-    el.addEventListener('click', function() { openPnlLb(this.dataset.type, this.dataset.date); });
+    var startX, startY, dragging;
+    el.addEventListener('mousedown', function(e){ startX=e.clientX; startY=e.clientY; dragging=false; });
+    el.addEventListener('mousemove', function(e){ if(Math.abs(e.clientX-startX)>5||Math.abs(e.clientY-startY)>5) dragging=true; });
+    el.addEventListener('click', function(e){
+      if(dragging) return;
+      // Don't open if clicking inside scroll area
+      if(e.target.closest('.pdc-scroll')) return;
+      openPnlLb(this.dataset.type, this.dataset.date);
+    });
   });
 }
 
@@ -2706,7 +2715,14 @@ function renderWeeklyFeed() {
   });
   feed.innerHTML = html;
   feed.querySelectorAll('.pnlc-feed-item').forEach(function(el) {
-    el.addEventListener('click', function() { openPnlLb(this.dataset.type, this.dataset.date); });
+    var startX, startY, dragging;
+    el.addEventListener('mousedown', function(e){ startX=e.clientX; startY=e.clientY; dragging=false; });
+    el.addEventListener('mousemove', function(e){ if(Math.abs(e.clientX-startX)>5||Math.abs(e.clientY-startY)>5) dragging=true; });
+    el.addEventListener('click', function(e){
+      if(dragging) return;
+      if(e.target.closest('.pdc-scroll')) return;
+      openPnlLb(this.dataset.type, this.dataset.date);
+    });
   });
 }
 
