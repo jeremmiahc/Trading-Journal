@@ -2659,6 +2659,14 @@ var pnlWeekKeys = [];
 var pnlLbType = 'daily';
 var pnlLbDate = '';
 
+function switchPnlTab(tab, el) {
+  document.querySelectorAll('.pnlc-tab').forEach(function(b){ b.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.pnlc-panel').forEach(function(p){ p.style.display='none'; });
+  var panel = document.getElementById('pnlc-' + tab);
+  if (panel) panel.style.display='block';
+}
+
 function initPnlCards() {
   pnlDayDates = [...new Set(trades.map(function(t){ return t.date; }).filter(Boolean))].sort().reverse();
   var weeks = {};
