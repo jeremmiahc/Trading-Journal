@@ -1437,12 +1437,10 @@ async function saveTrade() {
     date: date,
     direction: direction,
     poi: getToggle('poi') || '',
-    session: '',
     outcome: outcome,
     notes: fullNotes,
     mistakes: document.getElementById('f-mistakes').value.trim(),
     confluences: { 'Volume Edge': vp, 'Bookmap Stack': bm, 'CVD Divergence': true, 'RSI Divergence': rsi, 'Target Set': rules === 'Yes' },
-    says: [vp, !!getToggle('poi'), bm, true, rules === 'Yes'],
     stop_pts: stopVal,
     risk_usd: riskVal,
     r_result: rVal,
@@ -1471,7 +1469,7 @@ async function saveTrade() {
     if (trade.outcome === 'Win') playWinSound();
     toast('Trade saved', 'green');
   } catch(e) {
-    toast('Save failed: ' + e.message, 'red');
+    toast('Save failed: ' + (e.message || JSON.stringify(e)), 'red'); console.error('Save error:', e);
   }
   btn.textContent = 'Save Trade'; btn.disabled = false;
 }
