@@ -1415,6 +1415,7 @@ async function uploadScreenshots() {
   var urls = [];
   for (var i = 0; i < ssFiles.length; i++) {
     var file = ssFiles[i];
+    if (!file || !file.name) continue;
     var ext = file.name.split('.').pop() || 'jpg';
     var path = 'trade-' + Date.now() + '-' + i + '.' + ext;
     var res = await fetch(SUPA_URL + '/storage/v1/object/screenshots/' + path, {
@@ -1495,7 +1496,8 @@ async function saveTrade() {
     lastSync = new Date(); updateSync();
     clearForm();
     nav('log', document.querySelectorAll('.sb-item')[2]);
-    if (trade.outcome === 'Win') playWinSound();
+    var outcomeVal = (trade.outcome || trade.result || '').toLowerCase();
+    if (outcomeVal === 'win') playWinSound();
     toast('Trade saved', 'green');
   } catch(e) {
     toast('Save failed: ' + (e.message || JSON.stringify(e)), 'red'); console.error('Save error:', e);
@@ -2438,7 +2440,7 @@ function removeTrack(idx) {
 
 function playWinSound() {
   if (localStorage.getItem('atj_sound') === 'off') return;
-  if (!audioTracks.length) return;
+  if (!audioTracks.length) { console.log('No audio tracks uploaded in Settings'); return; }
   var track = audioTracks[Math.floor(Math.random() * audioTracks.length)];
   stopWinAudio();
 
@@ -2454,7 +2456,6 @@ function playWinSound() {
   currentAudio = audio;
   audio.play().then(function() {
     fadeAudioIn(audio, 0.85, 800);
-    // Fade out 2 seconds before the track ends
     audio.addEventListener('timeupdate', function() {
       var remaining = audio.duration - audio.currentTime;
       if (!isNaN(remaining) && remaining <= 2.5 && audio.volume > 0.01) {
@@ -2463,7 +2464,14 @@ function playWinSound() {
         fadeAudioOut(audio, 2000);
       }
     });
-  }).catch(function(){});
+  }).catch(function(err) {
+    console.warn('Win sound blocked:', err);
+    // Retry on next user interaction
+    document.addEventListener('click', function retry() {
+      audio.play().catch(function(){});
+      document.removeEventListener('click', retry);
+    }, { once: true });
+  });
 }
 
 function stopWinAudio() {
