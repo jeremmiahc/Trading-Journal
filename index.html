@@ -588,7 +588,8 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
   .pnlc-feed { display:flex; flex-direction:column; gap:28px; padding-bottom:40px; max-width:480px; }
   .pnlc-feed-item { cursor:pointer; border-radius:14px; will-change:transform; transition:box-shadow 0.15s ease; transform-style:preserve-3d; }
   .pnlc-feed-item:hover { box-shadow:0 24px 60px rgba(0,0,0,0.4); }
-  .pnl-daily-card, .pnl-weekly-card { width:100%; }
+  .pnl-daily-card, .pnl-weekly-card { width:100%; pointer-events:none; }
+  .pnlc-feed-item .pdc-ss img { pointer-events:none; }
   .pnlc-lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:500; align-items:center; justify-content:center; padding:24px; cursor:zoom-out; backdrop-filter:blur(8px); }
   .pnlc-lightbox.open { display:flex; }
   .pnlc-lightbox-inner { max-width:640px; width:100%; cursor:default; animation:fadeUp 0.25s cubic-bezier(0.22,1,0.36,1) both; transform:scale(1); }
