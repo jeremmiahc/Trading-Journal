@@ -22,6 +22,8 @@
 body.dark {
   --bg: #0f0e0c; --white: #181614; --s2: #1e1c18; --line: #2a2720; --line2: #3a3630;
   --text: #e8e0d0; --text2: #a09880; --text3: #60584e;
+  --green-bg: rgba(58,184,112,0.12); --green-mid: rgba(58,184,112,0.25);
+  --red-bg: rgba(192,96,96,0.12); --amber-bg: rgba(200,152,64,0.12);
 }
 body { background: var(--bg); font-family: var(--sans); color: var(--text); display: flex; min-height: 100vh; font-size: 13px; }
 
@@ -2028,9 +2030,9 @@ function openModal(id) {
   var confHTML='';
   var c=t.confluences||{};
   Object.keys(c).forEach(function(k){
-    confHTML+='<div style="display:flex;align-items:center;gap:8px;padding:7px 11px;background:'+(c[k]?'var(--green-bg)':'var(--s2)')+';border:1px solid '+(c[k]?'var(--green-mid)':'var(--line)')+';border-radius:6px;font-size:11px;margin-bottom:4px">'+
-      '<span style="color:'+(c[k]?'var(--green)':'var(--text3)')+';font-size:13px">'+( c[k]?'✓':'○')+'</span>'+
-      '<span style="font-size:13px;color:'+(c[k]?'var(--text)':'var(--text3)')+';'+(c[k]?'':'text-decoration:line-through')+'">'+k+'</span></div>';
+    confHTML+='<div style="display:flex;align-items:center;gap:10px;padding:9px 13px;border:1px solid '+(c[k]?'var(--green)':'var(--line)')+';border-radius:6px;margin-bottom:5px">'+
+      '<span style="font-size:15px;color:'+(c[k]?'var(--green)':'var(--text3)')+'">'+( c[k]?'✓':'○')+'</span>'+
+      '<span style="font-size:13px;font-weight:'+(c[k]?'600':'400')+';color:'+(c[k]?'var(--text)':'var(--text3)')+';'+(c[k]?'':'text-decoration:line-through opacity:0.5')+'">'+k+'</span></div>';
   });
   var mb=document.getElementById('modal-body');
   if(mb){
