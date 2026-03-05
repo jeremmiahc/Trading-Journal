@@ -1056,7 +1056,9 @@ document.addEventListener('keydown', function(e) {
     <div class="pnlc-panel active" id="pnlc-daily">
       <div class="pnlc-date-row">
         <label>Date</label>
-        <input type="date" id="pnlc-date" onchange="renderDailyCard()">
+        <select id="pnlc-date" onchange="renderDailyCard()" style="font-family:var(--sans);font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--white);color:var(--text);outline:none;min-width:180px">
+          <option value="">Select a date...</option>
+        </select>
       </div>
       <div id="pnlc-daily-card-wrap"></div>
       <div class="pnlc-share-row" id="pnlc-daily-share" style="display:none">
@@ -1074,9 +1076,10 @@ document.addEventListener('keydown', function(e) {
     <!-- WEEKLY PANEL -->
     <div class="pnlc-panel" id="pnlc-weekly">
       <div class="pnlc-date-row">
-        <label>Week of</label>
-        <input type="date" id="pnlc-week" onchange="renderWeeklyCard()">
-        <span style="font-size:11px;color:var(--text3)">(pick any day in the week)</span>
+        <label>Week</label>
+        <select id="pnlc-week" onchange="renderWeeklyCard()" style="font-family:var(--sans);font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--white);color:var(--text);outline:none;min-width:200px">
+          <option value="">Select a week...</option>
+        </select>
       </div>
       <div id="pnlc-weekly-card-wrap"></div>
       <div class="pnlc-share-row" id="pnlc-weekly-share" style="display:none">
@@ -2658,13 +2661,49 @@ function switchPnlTab(tab, el) {
 }
 
 function initPnlCards() {
-  var today = new Date().toISOString().split('T')[0];
+  // Populate daily dropdown with unique trade dates
   var di = document.getElementById('pnlc-date');
   var wi = document.getElementById('pnlc-week');
-  if (di && !di.value) di.value = today;
-  if (wi && !wi.value) wi.value = today;
-  renderDailyCard();
-  renderWeeklyCard();
+
+  if (di) {
+    var dates = [...new Set(trades.map(function(t){ return t.date; }).filter(Boolean))].sort().reverse();
+    di.innerHTML = '<option value="">Select a date...</option>' +
+      dates.map(function(d) {
+        var label = new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+        var dayTrades = trades.filter(function(t){ return t.date === d; });
+        var pnl = dayTrades.reduce(function(s,t){ return s+(t.pnl_usd||0); }, 0);
+        var pnlStr = pnl >= 0 ? '+$'+pnl : '-$'+Math.abs(pnl);
+        return '<option value="'+d+'">'+label+' · '+pnlStr+'</option>';
+      }).join('');
+    if (dates.length) { di.value = dates[0]; renderDailyCard(); }
+  }
+
+  if (wi) {
+    // Build unique weeks from trade dates
+    var weeks = {};
+    trades.forEach(function(t) {
+      if (!t.date) return;
+      var d = new Date(t.date + 'T12:00:00');
+      var day = d.getDay();
+      var mon = new Date(d); mon.setDate(d.getDate() - (day===0?6:day-1));
+      var key = mon.toISOString().split('T')[0];
+      if (!weeks[key]) {
+        var fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+        var monLabel = mon.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+        var friLabel = fri.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+        weeks[key] = { label: monLabel + ' – ' + friLabel, pnl: 0 };
+      }
+      weeks[key].pnl += (t.pnl_usd || 0);
+    });
+    var weekKeys = Object.keys(weeks).sort().reverse();
+    wi.innerHTML = '<option value="">Select a week...</option>' +
+      weekKeys.map(function(k) {
+        var w = weeks[k];
+        var pnlStr = w.pnl >= 0 ? '+$'+w.pnl : '-$'+Math.abs(w.pnl);
+        return '<option value="'+k+'">'+w.label+' · '+pnlStr+'</option>';
+      }).join('');
+    if (weekKeys.length) { wi.value = weekKeys[0]; renderWeeklyCard(); }
+  }
 }
 
 async function renderDailyCard() {
@@ -2755,8 +2794,7 @@ function renderWeeklyCard() {
 
   // Get Mon-Fri of the selected week
   var d = new Date(dateStr + 'T12:00:00');
-  var day = d.getDay();
-  var mon = new Date(d); mon.setDate(d.getDate() - (day===0?6:day-1));
+  var mon = new Date(d); // dateStr is already the Monday
   var weekDays = ['MON','TUE','WED','THU','FRI'].map(function(label, i) {
     var dd = new Date(mon); dd.setDate(mon.getDate() + i);
     return { label: label, date: dd.toISOString().split('T')[0] };
