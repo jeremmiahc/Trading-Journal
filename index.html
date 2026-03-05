@@ -194,8 +194,8 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
 .cal-cell.today .cal-day { color: var(--text); }
 .cal-dot { display:none; }
 .cal-of-bars { position:absolute; bottom:0; left:0; right:0; display:flex; height:36px; }
-.cal-of-bid { background:linear-gradient(to top, rgba(0,180,80,0.9), rgba(0,180,80,0.2)); }
-.cal-of-ask { background:linear-gradient(to top, rgba(220,50,50,0.9), rgba(220,50,50,0.2)); }
+.cal-of-bid { background:linear-gradient(to top, #00b850, rgba(0,184,80,0.3)); }
+.cal-of-ask { background:linear-gradient(to top, #dc3232, rgba(220,50,50,0.3)); }
 .cal-of-delta { position:absolute; bottom:3px; left:0; right:0; text-align:center; font-size:7px; font-weight:700; font-family:var(--mono,'JetBrains Mono',monospace); letter-spacing:0.5px; }
 .cal-of-delta.pos { color:#00cc66; }
 .cal-of-delta.neg { color:#ff4444; }
@@ -205,8 +205,8 @@ body { background: var(--bg); font-family: var(--sans); color: var(--text); disp
 .cal-cell.win-cell { border-color: rgba(0,180,80,0.35); }
 .cal-cell.loss-cell { border-color: rgba(220,50,50,0.35); }
 .cal-cell.today { box-shadow: 0 0 0 2px var(--text) !important; }
-body:not(.dark) .cal-of-bid { background:linear-gradient(to top, rgba(0,150,60,0.85), rgba(0,150,60,0.15)); }
-body:not(.dark) .cal-of-ask { background:linear-gradient(to top, rgba(200,30,30,0.85), rgba(200,30,30,0.15)); }
+body:not(.dark) .cal-of-bid { background:linear-gradient(to top, #00a048, rgba(0,160,72,0.25)); }
+body:not(.dark) .cal-of-ask { background:linear-gradient(to top, #c82020, rgba(200,32,32,0.2)); }
 body:not(.dark) .cal-of-delta.pos { color:#006633; }
 body:not(.dark) .cal-of-delta.neg { color:#cc2222; }
 body:not(.dark) .cal-of-pnl.pos { color:#006633; }
@@ -215,7 +215,7 @@ body:not(.dark) .cal-cell.win-cell { background: rgba(0,150,60,0.06); border-col
 body:not(.dark) .cal-cell.loss-cell { background: rgba(200,30,30,0.06); border-color:rgba(200,30,30,0.25); }
 .dark .cal-cell.win-cell { background: rgba(0,180,80,0.08); }
 .dark .cal-cell.loss-cell { background: rgba(220,50,50,0.08); }
-.cal-border: 1px solid var(--line); }
+.cal-border { border: 1px solid var(--line); }
 .cal-nav { display: flex; align-items: center; gap: 10px; }
 .cal-nav-btn { width: 26px; height: 26px; border-radius: 6px; background: var(--s2); border: 1px solid var(--line2); cursor: pointer; font-size: 12px; color: var(--text2); display: flex; align-items: center; justify-content: center; }
 .cal-month { font-size: 13px; font-weight: 600; color: var(--text); min-width: 130px; text-align: center; }
