@@ -1973,18 +1973,25 @@ function renderCalendar() {
 
     var ofHtml = '';
     if(dt.length) {
-      var barH = Math.max(8, Math.round(Math.abs(totalPnl)/maxPnl*34));
-      var bidPct = isWin ? Math.min(88, 50 + (totalPnl/maxPnl)*40) : Math.max(12, 50 - (Math.abs(totalPnl)/maxPnl)*35);
-      var askPct = 100 - bidPct;
+      var winPnl  = dt.filter(function(t){return t.outcome==='Win';}).reduce(function(s,t){return s+(t.pnl_usd||0);},0);
+      var lossPnl = Math.abs(dt.filter(function(t){return t.outcome==='Loss';}).reduce(function(s,t){return s+(t.pnl_usd||0);},0));
+      var totalAbs = (winPnl + lossPnl) || 1;
+      var winPct  = Math.round(winPnl  / totalAbs * 100);
+      var lossPct = Math.round(lossPnl / totalAbs * 100);
+      var barH = Math.max(10, Math.round(Math.abs(totalPnl)/maxPnl*36));
+      var netRatio = Math.min(1, Math.abs(totalPnl) / maxPnl);
+      var greenAlpha = winPnl  > 0 ? (isWin  ? 0.8 + netRatio*0.2 : 0.6) : 0;
+      var redAlpha   = lossPnl > 0 ? (isLoss ? 0.8 + netRatio*0.2 : 0.6) : 0;
       var pnlStr = (totalPnl>=0?'+$':'-$')+Math.abs(totalPnl).toLocaleString();
       var rStr = (totalR>=0?'+':'')+totalR.toFixed(1)+'R';
+      var netCls = totalPnl>0?'pos':totalPnl<0?'neg':'';
       ofHtml =
-        '<div class="cal-of-pnl '+(isWin?'pos':'neg')+'">'+pnlStr+'</div>'+
+        '<div class="cal-of-pnl '+netCls+'">'+pnlStr+'</div>'+
         '<div class="cal-of-bars">'+
-          '<div class="cal-of-bid" style="width:'+bidPct+'%;height:'+barH+'px;align-self:flex-end"></div>'+
-          '<div class="cal-of-ask" style="width:'+askPct+'%;height:'+Math.round(barH*0.55)+'px;align-self:flex-end"></div>'+
+          (winPct>0  ? '<div class="cal-of-bid" style="width:'+winPct+'%;height:'+barH+'px;opacity:'+greenAlpha+'"></div>' : '')+
+          (lossPct>0 ? '<div class="cal-of-ask" style="width:'+lossPct+'%;height:'+barH+'px;opacity:'+redAlpha+'"></div>' : '')+
         '</div>'+
-        '<div class="cal-of-delta '+(isWin?'pos':'neg')+'">'+rStr+'</div>';
+        '<div class="cal-of-delta '+netCls+'">'+rStr+'</div>';
     }
 
     cells+='<div class="'+cellCls+'" data-date="'+ds+'" onclick="calClick(this.dataset.date)">'+
