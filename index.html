@@ -2676,18 +2676,28 @@ function renderDailyFeed() {
   var feed = document.getElementById('pnlc-daily-feed');
   if (!feed) return;
   if (!pnlDayDates.length) { feed.innerHTML = '<div class="pnlc-empty">No trades logged yet.</div>'; return; }
-  feed.innerHTML = pnlDayDates.map(function(d) {
-    return '<div class="pnlc-feed-item" onmousemove="tiltCard(event,this)" onmouseleave="resetTilt(this)" onclick="openPnlLb(&quot;daily&quot;,&quot;'+d+'&quot;)">' + buildDailyHtml(d) + '</div>';
-  }).join('');
+  var html = '';
+  pnlDayDates.forEach(function(d) {
+    html += '<div class="pnlc-feed-item" data-type="daily" data-date="'+d+'" onmousemove="tiltCard(event,this)" onmouseleave="resetTilt(this)">' + buildDailyHtml(d) + '</div>';
+  });
+  feed.innerHTML = html;
+  feed.querySelectorAll('.pnlc-feed-item').forEach(function(el) {
+    el.addEventListener('click', function() { openPnlLb(this.dataset.type, this.dataset.date); });
+  });
 }
 
 function renderWeeklyFeed() {
   var feed = document.getElementById('pnlc-weekly-feed');
   if (!feed) return;
   if (!pnlWeekKeys.length) { feed.innerHTML = '<div class="pnlc-empty">No trades logged yet.</div>'; return; }
-  feed.innerHTML = pnlWeekKeys.map(function(d) {
-    return '<div class="pnlc-feed-item" onmousemove="tiltCard(event,this)" onmouseleave="resetTilt(this)" onclick="openPnlLb(&quot;weekly&quot;,&quot;'+d+'&quot;)">' + buildWeeklyHtml(d) + '</div>';
-  }).join('');
+  var html = '';
+  pnlWeekKeys.forEach(function(d) {
+    html += '<div class="pnlc-feed-item" data-type="weekly" data-date="'+d+'" onmousemove="tiltCard(event,this)" onmouseleave="resetTilt(this)">' + buildWeeklyHtml(d) + '</div>';
+  });
+  feed.innerHTML = html;
+  feed.querySelectorAll('.pnlc-feed-item').forEach(function(el) {
+    el.addEventListener('click', function() { openPnlLb(this.dataset.type, this.dataset.date); });
+  });
 }
 
 function tiltCard(e, el) {
