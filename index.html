@@ -599,7 +599,7 @@ body:not(.dark) .cal-cell.loss-cell { background: rgba(200,30,30,0.06); border-c
   /* ── LIGHTBOX ── */
   .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.94); z-index:99999; align-items:center; justify-content:center; cursor:zoom-out; }
   .lightbox.open { display:flex; }
-  .lightbox img { max-width:92vw; max-height:92vh; border-radius:8px; object-fit:contain; box-shadow:0 24px 80px rgba(0,0,0,0.8); }
+  .lightbox img { max-width:98vw; max-height:96vh; width:auto; height:auto; border-radius:4px; object-fit:contain; box-shadow:0 24px 80px rgba(0,0,0,0.8); cursor:default; }
   .lightbox-close { position:absolute; top:20px; right:24px; font-size:28px; color:#fff; cursor:pointer; opacity:0.6; line-height:1; }
   .lightbox-close:hover { opacity:1; }
 
@@ -686,15 +686,24 @@ function copyCard(type) {
 
 function openLightbox(src) {
   var img = document.getElementById('lightbox-img');
-  if (img) img.src = src;
+  if (img) { img.src = src; }
   var lb = document.getElementById('lightbox');
-  if (lb) { lb.style.display = 'flex'; lb.classList.add('open'); }
+  if (!lb) return;
+  lb.style.cssText = 'display:flex !important; position:fixed; inset:0; z-index:999999; background:rgba(0,0,0,0.97); align-items:center; justify-content:center; cursor:zoom-out;';
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Try native fullscreen
+  if (img && img.requestFullscreen) {
+    img.requestFullscreen().catch(function(){});
+  }
 }
 function closeLightbox() {
   var lb = document.getElementById('lightbox');
   if (lb) { lb.classList.remove('open'); lb.style.display = 'none'; }
   var img = document.getElementById('lightbox-img');
   if (img) img.src = '';
+  document.body.style.overflow = '';
+  if (document.fullscreenElement) document.exitFullscreen().catch(function(){});
 }
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLightbox();
