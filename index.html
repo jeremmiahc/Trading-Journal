@@ -708,6 +708,12 @@ function closeLightbox() {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLightbox();
 });
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.dataset && e.target.dataset.lightbox) {
+    e.stopPropagation();
+    openLightbox(e.target.dataset.lightbox);
+  }
+}, true);
 
 </script>
 </head>
@@ -2138,7 +2144,7 @@ function openModal(id) {
         return '<div><div class="modal-section-title">Screenshots</div>' +
           '<div style="display:flex;flex-direction:column;gap:8px">' +
           shots.map(function(url) {
-            return '<img src="' + url + '" style="width:100%;border-radius:6px;border:1px solid var(--line);cursor:pointer;transition:opacity 0.15s" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1" onclick="event.stopPropagation();openLightbox(this.src)" loading="lazy" alt="trade screenshot">';
+            return '<img src="' + url + '" data-lightbox="' + url + '" style="width:100%;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;transition:opacity 0.15s" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1" loading="lazy" alt="trade screenshot">';
           }).join('') +
           '</div></div>';
       })();
