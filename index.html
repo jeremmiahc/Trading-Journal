@@ -706,6 +706,15 @@ document.addEventListener('keydown', function(e) {
     closePnlLightbox();
   }
 });
+// Screenshot lightbox — single delegated listener on document capture phase
+document.addEventListener('click', function(e) {
+  var t = e.target;
+  if (t && t.tagName === 'IMG' && t.getAttribute('data-ss')) {
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    openLightbox(t.src);
+  }
+}, true);
 
 
 </script>
@@ -2137,7 +2146,7 @@ function openModal(id) {
         return '<div><div class="modal-section-title">Screenshots</div>' +
           '<div style="display:flex;flex-direction:column;gap:8px">' +
           shots.map(function(url) {
-            return '<img src="' + url + '" style="width:100%;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;transition:opacity 0.15s" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1" onclick="event.stopPropagation();openLightbox(\''+url+'\')" loading="lazy" alt="trade screenshot">';
+            return '<img src="' + url + '" data-ss="1" style="width:100%;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;transition:opacity 0.15s" loading="lazy" alt="trade screenshot">';
           }).join('') +
           '</div></div>';
       })();
