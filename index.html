@@ -685,25 +685,30 @@ function copyCard(type) {
 
 
 function openLightbox(src) {
-  var img = document.getElementById('lightbox-img');
-  if (img) { img.src = src; }
-  var lb = document.getElementById('lightbox');
-  if (!lb) return;
-  lb.style.cssText = 'display:flex !important; position:fixed; inset:0; z-index:999999; background:rgba(0,0,0,0.97); align-items:center; justify-content:center; cursor:zoom-out;';
+  // Reuse pnlc-lightbox overlay, replace content with just the image
+  var lb = document.getElementById('pnlc-lightbox');
+  var inner = document.getElementById('pnlc-lightbox-card');
+  var share = lb ? lb.querySelector('.pnlc-lightbox-share') : null;
+  if (!lb || !inner) return;
+  inner.innerHTML = '<img src="' + src + '" style="width:100%;max-height:82vh;object-fit:contain;border-radius:8px;display:block;">';
+  if (share) share.style.display = 'none';
+  lb.dataset.mode = 'screenshot';
   lb.classList.add('open');
   document.body.style.overflow = 'hidden';
-  // Try native fullscreen
-  if (img && img.requestFullscreen) {
-    img.requestFullscreen().catch(function(){});
-  }
 }
 function closeLightbox() {
-  var lb = document.getElementById('lightbox');
-  if (lb) { lb.classList.remove('open'); lb.style.display = 'none'; }
-  var img = document.getElementById('lightbox-img');
-  if (img) img.src = '';
+  var lb = document.getElementById('pnlc-lightbox');
+  if (lb) {
+    lb.classList.remove('open');
+    if (lb.dataset.mode === 'screenshot') {
+      var inner = document.getElementById('pnlc-lightbox-card');
+      var share = lb.querySelector('.pnlc-lightbox-share');
+      if (inner) inner.innerHTML = '';
+      if (share) share.style.display = '';
+      lb.dataset.mode = '';
+    }
+  }
   document.body.style.overflow = '';
-  if (document.fullscreenElement) document.exitFullscreen().catch(function(){});
 }
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLightbox();
@@ -2836,7 +2841,10 @@ function openPnlLb(type, dateStr) {
   document.getElementById('pnlc-lightbox').classList.add('open');
 }
 function closePnlLightbox() {
-  document.getElementById('pnlc-lightbox').classList.remove('open');
+  var lb = document.getElementById('pnlc-lightbox');
+  if (lb && lb.dataset.mode === 'screenshot') { closeLightbox(); return; }
+  if (lb) lb.classList.remove('open');
+  document.body.style.overflow = '';
 }
 function downloadCardLb() {
   var card = document.getElementById('pnlc-lightbox-card').firstElementChild;
