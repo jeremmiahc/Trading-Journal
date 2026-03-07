@@ -597,7 +597,7 @@ body:not(.dark) .cal-cell.loss-cell { background: rgba(200,30,30,0.06); border-c
 
 
   /* ── LIGHTBOX ── */
-  .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9999; align-items:center; justify-content:center; cursor:zoom-out; }
+  .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.94); z-index:99999; align-items:center; justify-content:center; cursor:zoom-out; }
   .lightbox.open { display:flex; }
   .lightbox img { max-width:92vw; max-height:92vh; border-radius:8px; object-fit:contain; box-shadow:0 24px 80px rgba(0,0,0,0.8); }
   .lightbox-close { position:absolute; top:20px; right:24px; font-size:28px; color:#fff; cursor:pointer; opacity:0.6; line-height:1; }
@@ -685,12 +685,16 @@ function copyCard(type) {
 
 
 function openLightbox(src) {
-  document.getElementById('lightbox-img').src = src;
-  document.getElementById('lightbox').classList.add('open');
+  var img = document.getElementById('lightbox-img');
+  if (img) img.src = src;
+  var lb = document.getElementById('lightbox');
+  if (lb) { lb.style.display = 'flex'; lb.classList.add('open'); }
 }
 function closeLightbox() {
-  document.getElementById('lightbox').classList.remove('open');
-  document.getElementById('lightbox-img').src = '';
+  var lb = document.getElementById('lightbox');
+  if (lb) { lb.classList.remove('open'); lb.style.display = 'none'; }
+  var img = document.getElementById('lightbox-img');
+  if (img) img.src = '';
 }
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLightbox();
@@ -2125,7 +2129,7 @@ function openModal(id) {
         return '<div><div class="modal-section-title">Screenshots</div>' +
           '<div style="display:flex;flex-direction:column;gap:8px">' +
           shots.map(function(url) {
-            return '<img src="' + url + '" style="width:100%;border-radius:6px;border:1px solid var(--line);cursor:pointer" onclick="openLightbox(this.src)" loading="lazy" alt="trade screenshot">';
+            return '<img src="' + url + '" style="width:100%;border-radius:6px;border:1px solid var(--line);cursor:pointer;transition:opacity 0.15s" onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1" onclick="event.stopPropagation();openLightbox(this.src)" loading="lazy" alt="trade screenshot">';
           }).join('') +
           '</div></div>';
       })();
