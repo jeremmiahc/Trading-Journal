@@ -622,7 +622,8 @@ body:not(.dark) .cal-cell.loss-cell { background: rgba(200,30,30,0.06); border-c
   .pnlc-lightbox-share { display:flex; gap:10px; margin-top:14px; justify-content:center; }
 
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
 // ── SHARE CARD ──
 function captureCard(type, callback) {
   var cardId = type === 'daily' ? 'pnlc-daily-card-wrap' : 'pnlc-weekly-card-wrap';
@@ -715,8 +716,6 @@ document.addEventListener('click', function(e) {
     openLightbox(t.src);
   }
 }, true);
-
-
 </script>
 </head>
 <body>
