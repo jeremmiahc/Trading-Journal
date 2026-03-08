@@ -1042,20 +1042,57 @@ document.addEventListener('click', function(e) {
 
   <!-- STATISTICS -->
   <div class="page" id="page-statistics">
-    <div class="page-header"><div class="page-title">Statistics</div><div class="page-sub">Performance breakdown — all time</div>
-    <div style="margin-top:16px">
-      <div class="panel-hdr" style="margin-bottom:10px">
-        <div class="panel-title">Confluence Correlation</div>
-        <div class="panel-meta">Win rate per confluence checked</div>
-      </div>
-      <div id="conf-corr-table" style="display:flex;flex-direction:column;gap:6px"></div>
-    </div>
-</div>
+    <div class="page-header"><div class="page-title">Statistics</div><div class="page-sub" id="stats-sub">Performance breakdown</div></div>
+
+    <!-- KPI Row -->
     <div class="grid-4" id="stats-top" style="margin-bottom:12px"></div>
+
+    <!-- Row 1: P&L + Session -->
+    <div class="row" style="margin-bottom:12px">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">P&amp;L Breakdown</div></div>
+        <div class="panel-body" id="stats-pnl"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Win Rate by Session</div><div class="panel-meta">Prime / Good / Slow</div></div>
+        <div class="panel-body" id="stats-sess"></div>
+      </div>
+    </div>
+
+    <!-- Row 2: POI + Confluence -->
+    <div class="row" style="margin-bottom:12px">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Win Rate by HTF POI</div></div>
+        <div class="panel-body" id="stats-poi"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Confluence Impact</div><div class="panel-meta">Win rate when each factor present</div></div>
+        <div class="panel-body"><div id="conf-corr-table" style="display:flex;flex-direction:column;gap:6px"></div></div>
+      </div>
+    </div>
+
+    <!-- Row 3: Emotion + Streaks + Mistakes -->
+    <div class="row" style="margin-bottom:12px">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Win Rate by Emotion</div></div>
+        <div class="panel-body" id="stats-emotion"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Streaks &amp; Averages</div></div>
+        <div class="panel-body" id="stats-streaks"></div>
+      </div>
+    </div>
+
+    <!-- Row 4: Best/Worst days + Mistakes -->
     <div class="row">
-      <div class="panel"><div class="panel-header"><div class="panel-title">Win Rate by POI</div></div><div class="panel-body" id="stats-poi"></div></div>
-      <div class="panel"><div class="panel-header"><div class="panel-title">Win Rate by Session</div></div><div class="panel-body" id="stats-sess"></div></div>
-      <div class="panel"><div class="panel-header"><div class="panel-title">Recent Mistakes</div></div><div class="panel-body" id="stats-mistakes"></div></div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Best &amp; Worst Days</div></div>
+        <div class="panel-body" id="stats-days"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Recent Mistakes</div></div>
+        <div class="panel-body" id="stats-mistakes"></div>
+      </div>
     </div>
   </div>
 
@@ -1513,6 +1550,7 @@ async function saveTrade() {
   var rVal = parseFloat(document.getElementById('f-r').value) || null;
   var pnlVal = parseFloat(document.getElementById('f-pnl').value) || null;
 
+  var sessLabel = getSessionLabel(timePst);
   var trade = {
     date: date,
     direction: direction,
@@ -1520,6 +1558,7 @@ async function saveTrade() {
     outcome: outcome,
     notes: fullNotes,
     mistakes: document.getElementById('f-mistakes').value.trim(),
+    session: sessLabel,
     confluences: { 'LVN Confirmed': vp, 'Bookmap Stack': bm, 'CVD Divergence': true, 'RSI Divergence': rsi, 'Target Set': rules === 'Yes', 'Absorption': absorption !== 'No' && !!absorption },
 
     stop_pts: stopVal,
@@ -1756,6 +1795,16 @@ function fDate(d) {
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return months[parseInt(parts[1])-1] + ' ' + parseInt(parts[2]) + ', ' + parts[0];
 }
+function getSessionLabel(timeStr) {
+  if (!timeStr) return '';
+  var parts = timeStr.split(':');
+  var mins = parseInt(parts[0])*60 + parseInt(parts[1]||0);
+  var st = sessTimes();
+  if (mins >= st.prime && mins < st.good) return 'Prime';
+  if (mins >= st.good && mins < st.end)  return 'Good';
+  if (mins >= st.end)                    return 'Slow';
+  return '';
+}
 function sessTimes() {
   function toMin(t) { if(!t) return 0; var p=t.split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
   return { prime: toMin(settings.primeSt||'06:45'), good: toMin(settings.goodSt||'07:45'), end: toMin(settings.endSt||'10:00') };
@@ -1863,6 +1912,7 @@ function renderDashboard() {
         return '<div class="recent-row" onclick="openModal(' + t.id + ')">' +
           '<span class="dir-badge ' + dirClass(t.direction) + '">' + t.direction + '</span>' +
           '<span style="font-size:11px;color:var(--text2);flex:1">' + fDate(t.date) + (t.poi?' · '+t.poi:'') + '</span>' +
+          (sessLabel?'<span class="cpill '+sessCls+'" style="font-size:9px">'+sessLabel+'</span>':'')+
           '<span class="outcome-badge ' + outcomeClass(t.outcome) + '">' + t.outcome + '</span>' +
           '</div>';
       }).join('');
@@ -1971,6 +2021,8 @@ function renderLog() {
     Object.keys(c).forEach(function(k) { confs += '<span class="cpill ' + (c[k]?'yes':'no') + '">' + k + '</span>'; });
     var backClass = t.outcome==='Win'?'back-win':t.outcome==='Loss'?'back-loss':'back-be';
     var rStr = t.r_result!=null?(t.r_result>0?'+':'')+t.r_result+'R':(t.outcome||'—');
+    var sessLabel = t.session || getSessionLabel((t.notes||'').match(/Time: (\S+)/)?.[1]||'');
+    var sessCls = sessLabel==='Prime'?'green':sessLabel==='Good'?'amber':sessLabel==='Slow'?'red':'';
     var pnlStr = t.pnl_usd!=null?(t.pnl_usd>0?'+$':'$')+t.pnl_usd:'';
     var whyStr = (t.why_taken||t.notes||'No notes logged.').slice(0,120);
     if ((t.why_taken||t.notes||'').length > 120) whyStr += '...';
@@ -2082,42 +2134,148 @@ function calClick(ds){var t=trades.filter(function(x){return x.date===ds;});if(t
 
 // ── STATISTICS ──
 function renderStats() {
-  var wins=trades.filter(function(t){return t.outcome==='Win';}).length;
-  var losses=trades.filter(function(t){return t.outcome==='Loss';}).length;
-  var total=trades.length;
-  var wr=(wins+losses)>0?Math.round(wins/(wins+losses)*100):null;
-  var sayAvg=total>0?Math.round(trades.reduce(function(a,t){return a+((t.says||[]).filter(Boolean)).length;},0)/total*100/5):null;
+  var wins   = trades.filter(function(t){return t.outcome==='Win';});
+  var losses = trades.filter(function(t){return t.outcome==='Loss';});
+  var total  = trades.length;
+  var wr     = (wins.length+losses.length)>0 ? Math.round(wins.length/(wins.length+losses.length)*100) : null;
+  var totalPnl = trades.reduce(function(a,t){return a+(t.pnl_usd||0);},0);
+  var avgWin   = wins.length   ? Math.round(wins.reduce(function(a,t){return a+(t.pnl_usd||0);},0)/wins.length)   : null;
+  var avgLoss  = losses.length ? Math.round(losses.reduce(function(a,t){return a+(t.pnl_usd||0);},0)/losses.length) : null;
+  var avgR     = trades.filter(function(t){return t.r_result!=null;}).length ?
+    (trades.reduce(function(a,t){return a+(t.r_result||0);},0) / trades.filter(function(t){return t.r_result!=null;}).length).toFixed(2) : null;
+  var pnlCls   = totalPnl>0?'green':totalPnl<0?'red':'';
+  var pnlStr   = totalPnl>=0?'+$'+totalPnl.toLocaleString():'-$'+Math.abs(totalPnl).toLocaleString();
+
+  // KPI cards
   var st=document.getElementById('stats-top');
   if(st)st.innerHTML=
     '<div class="stat-card"><div class="stat-label">Total Trades</div><div class="stat-val">'+total+'</div></div>'+
     '<div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-val '+(wr>=50?'green':wr!==null?'red':'')+'">'+( wr!==null?wr+'%':'—')+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Wins / Losses</div><div class="stat-val">'+wins+' / '+losses+'</div></div>'+
-    '<div class="stat-card"><div class="stat-label">Confluence Score</div><div class="stat-val '+(sayAvg>=80?'green':sayAvg!==null?'amber':'')+'">'+( sayAvg!==null?sayAvg+'%':'—')+'</div></div>';
+    '<div class="stat-card"><div class="stat-label">Net P&L</div><div class="stat-val '+pnlCls+'">'+( total?pnlStr:'—')+'</div></div>'+
+    '<div class="stat-card"><div class="stat-label">Avg R</div><div class="stat-val '+(avgR>0?'green':avgR!==null?'red':'')+'">'+( avgR!==null?avgR+'R':'—')+'</div></div>';
+
   function bkd(items) {
+    if (!items.filter(function(i){return i.n>0;}).length) return '<div style="font-size:11px;color:var(--text3);padding:4px 0">No data yet</div>';
     return items.map(function(item){
+      var c = item.pct===null?'var(--text3)':item.pct>=60?'var(--green)':item.pct>=45?'var(--amber)':'var(--red)';
       return '<div class="bkd-row"><div class="bkd-label">'+item.label+'<span style="color:var(--text3);font-size:10px"> ('+item.n+')</span></div>'+
-        '<div class="bkd-bar-wrap"><div class="bkd-bar" style="width:'+(item.pct||0)+'%;background:'+(item.pct>=50?'var(--green)':'var(--red)')+'"></div></div>'+
-        '<div class="bkd-val">'+(item.pct!==null?item.pct+'%':'—')+'</div></div>';
+        '<div class="bkd-bar-wrap"><div class="bkd-bar" style="width:'+(item.pct||0)+'%;background:'+c+'"></div></div>'+
+        '<div class="bkd-val" style="color:'+c+'">'+(item.pct!==null?item.pct+'%':'—')+'</div></div>';
     }).join('');
   }
-  var pois=['FVG','Liquidity Sweep','Rejection Block'];
+
+  // P&L breakdown
+  var profitFactor = losses.length && Math.abs(losses.reduce(function(a,t){return a+(t.pnl_usd||0);},0)) > 0
+    ? (wins.reduce(function(a,t){return a+(t.pnl_usd||0);},0) / Math.abs(losses.reduce(function(a,t){return a+(t.pnl_usd||0);},0))).toFixed(2) : null;
+  var bestTrade  = trades.reduce(function(a,t){return (t.pnl_usd||0)>(a.pnl_usd||0)?t:a;}, trades[0]||{});
+  var worstTrade = trades.reduce(function(a,t){return (t.pnl_usd||0)<(a.pnl_usd||0)?t:a;}, trades[0]||{});
+  var sp2 = document.getElementById('stats-pnl');
+  if(sp2) sp2.innerHTML = total ? [
+    {label:'Gross P&L', val: pnlStr, cls: pnlCls},
+    {label:'Avg Win',   val: avgWin!==null  ? '+$'+avgWin  : '—', cls:'green'},
+    {label:'Avg Loss',  val: avgLoss!==null ? '$'+avgLoss  : '—', cls:'red'},
+    {label:'Profit Factor', val: profitFactor||'—', cls: profitFactor>=1.5?'green':profitFactor?'amber':''},
+    {label:'Best Trade',  val: bestTrade.pnl_usd!=null?(bestTrade.pnl_usd>=0?'+$':'-$')+Math.abs(bestTrade.pnl_usd):'—', cls:'green'},
+    {label:'Worst Trade', val: worstTrade.pnl_usd!=null?(worstTrade.pnl_usd>=0?'+$':'-$')+Math.abs(worstTrade.pnl_usd):'—', cls:'red'},
+  ].map(function(r){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)">'+
+      '<span style="font-size:11px;color:var(--text2)">'+r.label+'</span>'+
+      '<span style="font-size:13px;font-weight:600;color:var(--'+r.cls+')">'+r.val+'</span></div>';
+  }).join('') : '<div style="font-size:11px;color:var(--text3)">No trades yet</div>';
+
+  // Session win rates (use auto-labeled session field)
+  var sess_items=['Prime','Good','Slow'].map(function(s){
+    var st2=trades.filter(function(t){
+      var sl = t.session || getSessionLabel((t.notes||'').match(/Time: (\S+)/)?.[1]||'');
+      return sl===s;
+    });
+    var sw=st2.filter(function(t){return t.outcome==='Win';}).length;
+    var sl=st2.filter(function(t){return t.outcome==='Loss';}).length;
+    return {label:s, n:st2.length, pct:(sw+sl)>0?Math.round(sw/(sw+sl)*100):null};
+  });
+  var ss=document.getElementById('stats-sess'); if(ss)ss.innerHTML=bkd(sess_items);
+
+  // POI win rates
+  var pois=['1H FVG','15m FVG','Rejection Block','None'];
   var poi_items=pois.map(function(p){
     var pt=trades.filter(function(t){return t.poi===p;});
     var pw=pt.filter(function(t){return t.outcome==='Win';}).length;
     var pl=pt.filter(function(t){return t.outcome==='Loss';}).length;
     return {label:p, n:pt.length, pct:(pw+pl)>0?Math.round(pw/(pw+pl)*100):null};
   });
-  var sp=document.getElementById('stats-poi'); if(sp)sp.innerHTML=bkd(poi_items)||'<div style="font-size:11px;color:var(--text3)">No data</div>';
-  var sess_items=[{key:'Prime (6:45–7:45)',label:'Prime'},{key:'Good (7:45–9:00)',label:'Good'},{key:'Slow (9:00–10:00)',label:'Slow'}].map(function(s){
-    var st2=trades.filter(function(t){return t.session===s.key;});
-    var sw=st2.filter(function(t){return t.outcome==='Win';}).length;
-    var sl=st2.filter(function(t){return t.outcome==='Loss';}).length;
-    return {label:s.label, n:st2.length, pct:(sw+sl)>0?Math.round(sw/(sw+sl)*100):null};
+  var sp=document.getElementById('stats-poi'); if(sp)sp.innerHTML=bkd(poi_items);
+
+  // Emotion win rates
+  var emotions=['Calm','Confident','FOMO','Revenge','Bored','Anxious'];
+  var emo_items=emotions.map(function(e){
+    var et=trades.filter(function(t){return t.emotion===e;});
+    var ew=et.filter(function(t){return t.outcome==='Win';}).length;
+    var el=et.filter(function(t){return t.outcome==='Loss';}).length;
+    return {label:e, n:et.length, pct:(ew+el)>0?Math.round(ew/(ew+el)*100):null};
   });
-  var ss=document.getElementById('stats-sess'); if(ss)ss.innerHTML=bkd(sess_items);
+  var se=document.getElementById('stats-emotion'); if(se)se.innerHTML=bkd(emo_items);
+
+  // Streaks & averages
+  var streak=0; var maxStreak=0; var curStreak=0; var streakType='';
+  var sorted=[].concat(trades).reverse();
+  sorted.forEach(function(t){
+    if(t.outcome==='Win'){if(streakType==='Win'){curStreak++;}else{streakType='Win';curStreak=1;} maxStreak=Math.max(maxStreak,curStreak);}
+    else if(t.outcome==='Loss'){if(streakType==='Loss'){curStreak++;}else{streakType='Loss';curStreak=1;}}
+  });
+  // Current streak from newest
+  var curStreakCount=0; var curStreakType='';
+  for(var i=0;i<trades.length;i++){
+    if(i===0){curStreakType=trades[i].outcome;curStreakCount=1;}
+    else if(trades[i].outcome===curStreakType){curStreakCount++;}
+    else break;
+  }
+  var avgRWins  = wins.filter(function(t){return t.r_result!=null;});
+  var avgRLoss  = losses.filter(function(t){return t.r_result!=null;});
+  var sst=document.getElementById('stats-streaks');
+  if(sst) sst.innerHTML = [
+    {label:'Current Streak', val: curStreakCount ? curStreakCount+(curStreakType==='Win'?' W':' L') : '—', cls: curStreakType==='Win'?'green':curStreakType==='Loss'?'red':''},
+    {label:'Best Win Streak', val: maxStreak ? maxStreak+' W' : '—', cls:'green'},
+    {label:'Avg Win (R)',  val: avgRWins.length  ? '+'+(avgRWins.reduce(function(a,t){return a+t.r_result;},0)/avgRWins.length).toFixed(1)+'R' :'—', cls:'green'},
+    {label:'Avg Loss (R)', val: avgRLoss.length  ? (avgRLoss.reduce(function(a,t){return a+t.r_result;},0)/avgRLoss.length).toFixed(1)+'R' :'—', cls:'red'},
+    {label:'Total Trades', val: total, cls:''},
+    {label:'Wins / Losses', val: wins.length+' / '+losses.length, cls:''},
+  ].map(function(r){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)">'+
+      '<span style="font-size:11px;color:var(--text2)">'+r.label+'</span>'+
+      '<span style="font-size:13px;font-weight:600;color:var(--'+r.cls+')">'+r.val+'</span></div>';
+  }).join('');
+
+  // Best/Worst days
+  var dayMap={};
+  trades.forEach(function(t){
+    if(!dayMap[t.date]) dayMap[t.date]={pnl:0,wins:0,losses:0};
+    dayMap[t.date].pnl+=(t.pnl_usd||0);
+    if(t.outcome==='Win') dayMap[t.date].wins++;
+    if(t.outcome==='Loss') dayMap[t.date].losses++;
+  });
+  var days=Object.keys(dayMap).map(function(d){return {date:d,pnl:dayMap[d].pnl,wins:dayMap[d].wins,losses:dayMap[d].losses};});
+  days.sort(function(a,b){return b.pnl-a.pnl;});
+  var topDays=days.slice(0,3).concat(days.slice(-2).reverse());
+  var sd=document.getElementById('stats-days');
+  if(sd) sd.innerHTML = days.length ? topDays.map(function(d,i){
+    var cls=d.pnl>=0?'green':'red';
+    var pStr=(d.pnl>=0?'+$':'-$')+Math.abs(d.pnl).toLocaleString();
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)">'+
+      '<span style="font-size:11px;color:var(--text2)">'+fDate(d.date)+'</span>'+
+      '<span style="font-size:10px;color:var(--text3)">'+d.wins+'W '+d.losses+'L</span>'+
+      '<span style="font-size:13px;font-weight:600;color:var(--'+cls+')">'+pStr+'</span></div>';
+  }).join('') : '<div style="font-size:11px;color:var(--text3)">No data</div>';
+
+  // Mistakes
   var mt=trades.filter(function(t){return t.mistakes&&t.mistakes.trim();});
   var sm=document.getElementById('stats-mistakes');
-  if(sm)sm.innerHTML=mt.length?mt.slice(0,4).map(function(t){return '<div style="padding:7px 0;border-bottom:1px solid var(--line);font-size:11px;color:var(--text2);line-height:1.5">'+fDate(t.date)+' — '+t.mistakes.slice(0,80)+(t.mistakes.length>80?'...':'')+'</div>';}).join(''):'<div style="font-size:11px;color:var(--text3)">No mistakes logged</div>';
+  if(sm)sm.innerHTML=mt.length?mt.slice(0,5).map(function(t){
+    return '<div style="padding:7px 0;border-bottom:1px solid var(--line);font-size:11px;color:var(--text2);line-height:1.5">'+
+      '<span style="color:var(--text3);margin-right:6px">'+fDate(t.date)+'</span>'+t.mistakes.slice(0,90)+(t.mistakes.length>90?'...':'')+'</div>';
+  }).join(''):'<div style="font-size:11px;color:var(--text3)">No mistakes logged — keep it that way</div>';
+
+  // Confluence correlation
+  renderConfluenceCorrelation();
 }
 
 // ── COMPLIANCE ──
