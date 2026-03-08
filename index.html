@@ -1350,6 +1350,12 @@ async function sbDelete(table, col, val) {
   if (!r.ok) throw new Error('HTTP ' + r.status);
 }
 
+async function sbUpdate(table, id, data) {
+  var url = SUPA_URL + '/rest/v1/' + table + '?id=eq.' + id;
+  var r = await fetch(url, { method:'PATCH', headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(data) });
+  if (!r.ok) { var e = await r.json(); throw new Error(e.message || 'Update failed'); }
+  return await r.json();
+}
 async function sbInsert(table, row) {
   var url = SUPA_URL + '/rest/v1/' + table;
   var r = await fetch(url, { method:'POST', headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, body: JSON.stringify(row) });
