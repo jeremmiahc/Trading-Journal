@@ -788,9 +788,12 @@ document.addEventListener('click', function(e) {
         <canvas id="equity-chart"></canvas>
       </div>
     </div>
-    <div class="dash-rule" id="dash-rule">
-      <div class="dash-rule-title">Session Status</div>
-      <div class="dash-rule-text" id="dash-sess">Loading...</div>
+    <div class="dash-rule" id="dash-rule" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div class="dash-rule-title">Session Status</div>
+        <div class="dash-rule-text" id="dash-sess">Loading...</div>
+      </div>
+      <button id="end-session-btn" onclick="startEndSession()" style="display:none;flex-shrink:0;padding:8px 16px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-mid);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">End Session</button>
     </div>
     <div class="grid-4">
       <div class="stat-card"><div class="stat-label">Trades Today</div><div class="stat-val" id="d-today">0</div><div class="stat-change">Max 3 · Stop after 2 consec losses</div></div>
@@ -1332,6 +1335,24 @@ document.addEventListener('click', function(e) {
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- END SESSION MODAL -->
+<div id="end-session-modal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--white);border-radius:12px;border:1px solid var(--line);width:100%;max-width:560px;max-height:88vh;overflow-y:auto">
+    <div style="padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:16px;font-weight:600;color:var(--text)">Session Debrief</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px" id="es-date"></div>
+      </div>
+      <span onclick="closeEndSession()" style="cursor:pointer;font-size:18px;color:var(--text3);padding:4px 8px">✕</span>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:16px" id="es-questions"></div>
+    <div style="padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px">
+      <button onclick="closeEndSession()" style="padding:8px 16px;background:var(--s2);border:1px solid var(--line);border-radius:6px;font-size:12px;cursor:pointer;color:var(--text2)">Cancel</button>
+      <button onclick="saveEndSession()" style="padding:8px 16px;background:var(--text);color:var(--white);border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Save Debrief</button>
+    </div>
+  </div>
+</div>
 <div class="win-flash" id="win-flash"></div>
 
 <script>
@@ -1766,6 +1787,104 @@ function toggleSidebar() {
   btn.classList.toggle('collapsed', col);
 }
 
+// ── END SESSION ──
+function startEndSession() {
+  var today = todayStr();
+  var todayTrades = trades.filter(function(t){ return t.date === today; });
+  if (!todayTrades.length) return;
+
+  var qs = generateDebriefQuestions(todayTrades);
+  var qEl = document.getElementById('es-questions');
+  var dateEl = document.getElementById('es-date');
+  if(dateEl) dateEl.textContent = fDate(today) + ' · ' + todayTrades.length + ' trade' + (todayTrades.length!==1?'s':'');
+  if(qEl) {
+    qEl.innerHTML = qs.map(function(q, i){
+      return '<div>' +
+        '<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">'+(i+1)+'. '+q+'</div>' +
+        '<textarea id="es-q-'+i+'" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;font-size:12px;color:var(--text);background:var(--s2);resize:vertical;min-height:64px;font-family:inherit" placeholder="Your answer..."></textarea>' +
+      '</div>';
+    }).join('');
+  }
+  document.getElementById('end-session-modal').style.display = 'flex';
+}
+
+function generateDebriefQuestions(ts) {
+  var qs = [];
+  var wins   = ts.filter(function(t){ return t.outcome==='Win'; });
+  var losses = ts.filter(function(t){ return t.outcome==='Loss'; });
+  var totalPnl = ts.reduce(function(a,t){ return a+(t.pnl_usd||0); }, 0);
+  var emotions = ts.map(function(t){ return t.emotion; }).filter(Boolean);
+  var badEmotions = ts.filter(function(t){ return t.emotion==='FOMO'||t.emotion==='Revenge'||t.emotion==='Anxious'; });
+  var ruleBreaks = ts.filter(function(t){ var c=t.confluences||{}; return !c['LVN Confirmed']||!c['Target Set']; });
+  var noAbsorption = ts.filter(function(t){ var c=t.confluences||{}; return !c['Absorption']; });
+  var overtraded = ts.length > 3;
+  var twoLosses = losses.length >= 2;
+  var slowTrades = ts.filter(function(t){ return t.session==='Slow'; });
+
+  // Always ask overall feel — first question
+  if (wins.length === ts.length) {
+    qs.push('You went ' + wins.length + '/' + ts.length + ' today. What clicked? Was it patience, setup quality, or execution?');
+  } else if (losses.length === ts.length) {
+    qs.push('Tough session — all losses. Looking back, was the issue the setups themselves or how you executed them?');
+  } else {
+    var pnlStr = (totalPnl>=0?'+$':'-$')+Math.abs(totalPnl||0).toLocaleString();
+    qs.push('You ended ' + wins.length + 'W / ' + losses.length + 'L (' + pnlStr + '). How do you feel about the quality of your decisions today, separate from the result?');
+  }
+
+  // Rule violations
+  if (overtraded) {
+    qs.push('You took ' + ts.length + ' trades — over your 3-trade limit. What was going through your mind when you took that extra trade?');
+  }
+  if (twoLosses && ts.length > losses.length) {
+    qs.push('You hit 2 losses but kept trading. What made you override the stop rule?');
+  }
+  if (ruleBreaks.length) {
+    var rb = ruleBreaks[0];
+    var c = rb.confluences||{};
+    var missing = !c['LVN Confirmed'] ? 'no LVN confirmed' : 'no target identified';
+    qs.push('Your ' + (rb.outcome||'') + ' trade on ' + fDate(rb.date) + ' had ' + missing + '. Did you know at the time or only see it in review?');
+  }
+  if (noAbsorption.length && noAbsorption.length < ts.length) {
+    qs.push(noAbsorption.length + ' of your trades had no absorption candle. Are you skipping step 3 of your entry or is the signal genuinely unclear in those moments?');
+  }
+
+  // Emotion
+  if (badEmotions.length) {
+    var em = badEmotions[0].emotion;
+    qs.push('You tagged "' + em + '" on at least one trade. What triggered that state and what would it take to catch it before you enter next time?');
+  }
+
+  // Slow session
+  if (slowTrades.length) {
+    qs.push('You traded in the Slow window (after 9am). Was the setup strong enough to justify it, or were you just looking for action?');
+  }
+
+  // Cap at 5
+  return qs.slice(0, 5);
+}
+
+function closeEndSession() {
+  document.getElementById('end-session-modal').style.display = 'none';
+}
+
+async function saveEndSession() {
+  var today = todayStr();
+  var qEls = document.getElementById('es-questions').querySelectorAll('textarea');
+  var answers = [];
+  qEls.forEach(function(ta, i){ answers.push({ q: i+1, a: ta.value.trim() }); });
+  var data = { date: today, answers: answers, saved_at: new Date().toISOString() };
+  try {
+    await sbInsert('session_debriefs', data);
+    closeEndSession();
+    toast('Debrief saved', 'green');
+  } catch(e) {
+    // Fallback: save to localStorage if table doesn't exist yet
+    localStorage.setItem('debrief_'+today, JSON.stringify(data));
+    closeEndSession();
+    toast('Debrief saved locally', 'green');
+  }
+}
+
 function cancelEdit() {
   clearForm();
   nav('log', document.querySelectorAll('.sb-item')[2]);
@@ -1893,6 +2012,8 @@ function renderDashboard() {
   else { sessText='Session closed. Shut down the platform. Review your trades.'; sessColor='var(--text3)'; }
   var dr = document.getElementById('dash-rule'); if(dr) dr.style.borderLeftColor=sessColor;
   var ds2 = document.getElementById('dash-sess'); if(ds2) ds2.textContent=sessText;
+  var esBtn = document.getElementById('end-session-btn');
+  if(esBtn) esBtn.style.display = todayTrades.length > 0 ? 'block' : 'none';
   var dToday = document.getElementById('d-today'); if(dToday){dToday.textContent=todayTrades.length; dToday.className='stat-val'+(todayTrades.length>=2?' red':'');}
   var dTotal = document.getElementById('d-total'); if(dTotal) dTotal.textContent=trades.length;
   var dWr = document.getElementById('d-wr'); if(dWr){dWr.textContent=wr!==null?wr+'%':'—'; dWr.className='stat-val'+(wr>=50?' green':wr!==null?' red':'');}
