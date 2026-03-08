@@ -1909,10 +1909,11 @@ function renderDashboard() {
     if(!trades.length){dr2.innerHTML='<div style="font-size:11px;color:var(--text3);text-align:center;padding:14px">No trades yet</div>';}
     else{
       dr2.innerHTML=trades.slice(0,5).map(function(t){
+        var sl=t.session||''; var sc=sl==='Prime'?'green':sl==='Good'?'amber':sl==='Slow'?'red':'';
         return '<div class="recent-row" onclick="openModal(' + t.id + ')">' +
           '<span class="dir-badge ' + dirClass(t.direction) + '">' + t.direction + '</span>' +
           '<span style="font-size:11px;color:var(--text2);flex:1">' + fDate(t.date) + (t.poi?' · '+t.poi:'') + '</span>' +
-          (sessLabel?'<span class="cpill '+sessCls+'" style="font-size:9px">'+sessLabel+'</span>':'')+
+          (sl?'<span class="cpill '+sc+'" style="font-size:9px">'+sl+'</span>':'')+
           '<span class="outcome-badge ' + outcomeClass(t.outcome) + '">' + t.outcome + '</span>' +
           '</div>';
       }).join('');
