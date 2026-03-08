@@ -1035,6 +1035,7 @@ document.addEventListener('click', function(e) {
       <div class="lf-actions">
         <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
         <button class="btn btn-primary" id="save-btn" onclick="saveTrade()">Save Trade</button>
+        <button class="btn btn-ghost" id="cancel-edit-btn" style="display:none" onclick="cancelEdit()">Cancel Edit</button>
       </div>
     </div>
   </div>
@@ -1520,8 +1521,7 @@ async function saveTrade() {
     notes: fullNotes,
     mistakes: document.getElementById('f-mistakes').value.trim(),
     confluences: { 'LVN Confirmed': vp, 'Bookmap Stack': bm, 'CVD Divergence': true, 'RSI Divergence': rsi, 'Target Set': rules === 'Yes', 'Absorption': absorption !== 'No' && !!absorption },
-    absorption: absorption || '',
-    session_window: getToggle('session') || '',
+
     stop_pts: stopVal,
     risk_usd: riskVal,
     r_result: rVal,
@@ -1727,9 +1727,15 @@ function toggleSidebar() {
   btn.classList.toggle('collapsed', col);
 }
 
+function cancelEdit() {
+  clearForm();
+  nav('log', document.querySelectorAll('.sb-item')[2]);
+}
 function clearForm() {
   var btn = document.getElementById('save-btn');
   if(btn){ btn.textContent='Save Trade'; btn.dataset.editId=''; }
+  var cancelBtn = document.getElementById('cancel-edit-btn');
+  if(cancelBtn) cancelBtn.style.display='none';
   var existingEl = document.getElementById('ss-existing');
   if(existingEl) existingEl.remove();
   var fd = document.getElementById('f-date'); if (fd) fd.value = todayStr();
@@ -2245,6 +2251,8 @@ function editTrade(id) {
     // Mark as edit mode
     var btn = document.getElementById('save-btn');
     if(btn){ btn.textContent='Update Trade'; btn.dataset.editId = id; }
+    var cancelBtn = document.getElementById('cancel-edit-btn');
+    if(cancelBtn) cancelBtn.style.display='inline-flex';
     // Show existing screenshots
     if(t.screenshot_urls && t.screenshot_urls.length){
       var existing = document.getElementById('ss-existing');
