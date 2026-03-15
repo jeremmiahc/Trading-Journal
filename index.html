@@ -1394,7 +1394,13 @@ canvas#equity-chart { width: 100%; height: 140px; display: block; padding: 12px;
 <div class="toast" id="toast"></div>
 
 <script>
-
+// ── navTo stub: safe to call from onclick before JS loads ──
+var _navQueue = [];
+function navTo(p) {
+  if (window._navReady) { window._doNav(p); } else { _navQueue.push(p); }
+}
+</script>
+<script>
 // ── SUPABASE + CORE LOGIC (preserved from previous build) ──
 const SUPA_URL = 'https://najvjcciafmorqxsuhfi.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hanZqY2NpYWZtb3JxeHN1aGZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTcwNjAsImV4cCI6MjA4ODE3MzA2MH0.Zah3ounKNI_ww316dOBr39eLVlZN_G5TCq6nxghXSTs';
@@ -2772,8 +2778,12 @@ async function renderWeeklyCard(){renderWeeklyFeed();}
 // ── NAVIGATION ──────────────────────────────────────────────────────────────
 var currentPage = 'today';
 var historyFilter = 'all';
+window._navReady = true;
+window._doNav = function(page) { _navToImpl(page); };
+// Flush any queued navs
+if (window._navQueue && _navQueue.length) { var _q=_navQueue.splice(0); _q.forEach(function(p){_doNav(p);}); }
 
-function navTo(page) {
+function _navToImpl(page) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
   var pg = document.getElementById('page-' + page);
@@ -2812,6 +2822,7 @@ function navTo(page) {
   if (page === 'cards') initPnlCards();
   if (page === 'more') { renderCalendar(); loadForexFactory(); applySettings(); loadAudioSettings(); var ec = document.getElementById('export-count'); if(ec) ec.textContent = trades.length + ' trades'; }
   if (page === 'log') { setTimeout(setupDrop, 50); }
+  if (page === 'settings') navTo('more');
 }
 
 // ── STATUS BAR ──────────────────────────────────────────────────────────────
@@ -3125,8 +3136,9 @@ function applySettings() {
   var sp = document.getElementById('s-prime'); if(sp) sp.value = settings.primeSt||'06:45';
   var sg = document.getElementById('s-good'); if(sg) sg.value = settings.goodSt||'07:45';
   var se = document.getElementById('s-end'); if(se) se.value = settings.endSt||'10:30';
-  var st = document.getElementById('status-title');
-  if(st) st.textContent = settings.traderName ? settings.traderName + "'s Session" : "Today's Session";
+  var title = settings.traderName ? settings.traderName + "'s Session" : "Today's Session";
+  var st = document.getElementById('status-title'); if(st) st.textContent = title;
+  var logo = document.getElementById('sb-logo-name'); if(logo) logo.textContent = settings.traderName ? settings.traderName + "'s Journal" : 'Journal';
 }
 
 // ── CONNECTION ────────────────────────────────────────────────────────────────
@@ -3192,13 +3204,7 @@ function editTrade(id) {
     var timeMatch=notes.match(/Time: (\S+)/); var cvdMatch=notes.match(/CVD Lead: (\d+)/);
     var ft=document.getElementById('f-time'); if(ft&&timeMatch) ft.value=timeMatch[1];
     var fc=document.getElementById('f-cvd'); if(fc&&cvdMatch) fc.value=cvdMatch[1];
-    var cleanNotes=notes.replace(/
-Time:[^
-]*|
-CVD Lead:[^
-]*|
-Rules followed:[^
-]*/g,'').trim();
+    var cleanNotes=notes.replace(/\nTime:[^\n]*|\nCVD Lead:[^\n]*|\nRules followed:[^\n]*/g,'').trim();;
     document.getElementById('f-notes').value=cleanNotes;
     document.getElementById('f-mistakes').value=t.mistakes||'';
     document.getElementById('f-why').value=t.why_taken||'';
