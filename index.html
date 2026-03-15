@@ -64,8 +64,7 @@ body {
   .modal-overlay { align-items: center !important; padding: 24px; }
   .modal-sheet { border-radius: 16px; max-width: 560px; max-height: 88vh; }
   .modal-handle { display: none; }
-  /* Tab bar centered at bottom on desktop */
-  .tab-bar { max-width: 600px !important; left: 50% !important; transform: translateX(-50%) !important; border-radius: 20px 20px 0 0; }
+  /* Tab bar handled by .tab-bar-wrap */
 }
 
 @media (min-width: 1100px) {
@@ -533,8 +532,6 @@ body {
 .tab-bar-wrap.hidden .tab-pill-line { transform: rotate(180deg); }
 .tab-bar {
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(5,1fr);
   height: var(--tab-bar-h);
