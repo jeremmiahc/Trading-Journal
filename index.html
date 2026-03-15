@@ -499,14 +499,65 @@ body {
 .es-panel.hidden { display: none; }
 
 /* ── TAB BAR ── */
+/* ── TAB BAR WRAP ── */
+.tab-bar-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 680px;
+  z-index: 100;
+  transition: bottom 0.4s cubic-bezier(0.22,1,0.36,1);
+}
+.tab-bar-wrap.hidden {
+  bottom: calc(-1 * var(--tab-bar-h));
+}
+
+/* Pill handle — sits above the tab bar, centered */
+.tab-pill {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+}
+.tab-bar-wrap.hidden .tab-pill {
+  border-radius: 8px;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  top: -20px;
+}
+.tab-pill-line {
+  width: 18px;
+  height: 3px;
+  background: var(--text4);
+  border-radius: 2px;
+  transition: transform 0.3s;
+}
+.tab-bar-wrap.hidden .tab-pill-line {
+  transform: rotate(180deg);
+}
+
+/* Tab bar itself */
 .tab-bar {
-  position: fixed; bottom: 0; left: 0; right: 0;
+  width: 100%;
   background: rgba(255,255,255,0.96);
   border-top: 1px solid var(--border);
-  display: grid; grid-template-columns: repeat(5,1fr);
+  display: grid;
+  grid-template-columns: repeat(5,1fr);
   height: var(--tab-bar-h);
   padding-bottom: env(safe-area-inset-bottom, 0);
-  z-index: 100;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -715,6 +766,10 @@ body {
 
 <div class="app">
   <!-- TAB BAR (mobile: bottom bar | desktop: left sidebar) -->
+  <div class="tab-bar-wrap" id="tab-bar-wrap">
+    <div class="tab-pill" id="tab-pill" onclick="toggleTabBar()">
+      <div class="tab-pill-line"></div>
+    </div>
   <div class="tab-bar">
     <div class="tab-item active" id="tab-today" onclick="navTo('today')">
       <div class="tab-icon">
@@ -747,6 +802,7 @@ body {
       <div class="tab-label">Settings</div>
     </div>
   </div>
+  </div><!-- end tab-bar-wrap -->
 
 
   <!-- STATUS BAR (mobile only — hidden on desktop) -->
@@ -3110,6 +3166,17 @@ async function init(){
 }
 
 document.addEventListener('DOMContentLoaded', function() { updateStatusBar(); });
+
+function toggleTabBar() {
+  var wrap = document.getElementById('tab-bar-wrap');
+  if (!wrap) return;
+  var hidden = wrap.classList.toggle('hidden');
+  var scroll = document.getElementById('scroll-area');
+  if (scroll) {
+    scroll.style.paddingBottom = hidden ? '40px' : '';
+  }
+}
+
 init();
 </script>
 </body>
