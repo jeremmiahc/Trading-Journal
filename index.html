@@ -56,13 +56,15 @@ body {
   body { overflow: hidden; }
   .app { flex-direction: row; height: 100vh; }
   .tab-bar {
-    position: relative; bottom: auto; left: auto; transform: none;
+    position: relative !important; bottom: auto !important; left: auto !important;
+    transform: none !important; max-width: none !important;
     width: 220px; flex-shrink: 0; height: 100vh;
     flex-direction: column; justify-content: flex-start;
     border-top: none; border-right: 1px solid var(--border);
-    padding: 0; grid-template-columns: none;
-    display: flex; align-items: stretch;
-    background: var(--surface);
+    padding: 0; grid-template-columns: none !important;
+    display: flex !important; align-items: stretch;
+    background: var(--surface); z-index: 1;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
   }
   .tab-bar-logo {
     padding: 24px 20px 16px; border-bottom: 1px solid var(--border);
@@ -91,10 +93,11 @@ body {
   .tab-conn-label { font-size: 11px; color: var(--text3); }
   .tab-bar-icon { width: 18px; height: 18px; }
   /* Content area fills the rest */
-  .status-bar { display: none; }
+  .status-bar { display: none !important; }
+  #desktop-header { display: flex !important; }
   .scroll-area {
-    flex: 1; padding: 28px 32px calc(28px); max-width: 900px;
-    margin: 0 auto; width: 100%;
+    flex: 1; padding: 28px 32px 28px;
+    overflow-y: auto; overflow-x: hidden;
   }
   /* Page gets more columns on desktop */
   .today-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -151,7 +154,7 @@ body {
 }
 
 /* ── PAGES ── */
-.page { display: none; flex-direction: column; gap: 12px; }
+.page { display: none; flex-direction: column; gap: 12px; max-width: 860px; width: 100%; }
 .page.active { display: flex; animation: pageIn 0.22s cubic-bezier(0.22,1,0.36,1) both; }
 @keyframes pageIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
@@ -557,7 +560,7 @@ canvas#equity-chart { width: 100%; height: 140px; display: block; padding: 12px;
 .tab-nav-section { display: none; }
 .tab-spacer { display: none; }
 .tab-conn { display: none; }
-.tab-bar-icon { display: none; }
+.tab-bar-icon { display: flex; }
 .tab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; padding: 10px 0; transition: opacity 0.15s; }
 .tab-item:active { opacity: 0.6; }
 .tab-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
@@ -3437,8 +3440,9 @@ async function init(){
   var now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
   var fd=document.getElementById('f-date');if(fd)fd.value=todayStr();
   loadSettings();
+  updateStatusBar(); // update immediately after settings load
   await loadTrades();
-  updateStatusBar();
+  updateStatusBar(); // update again after trades
   // Show desktop header on wide screens
   var dh = document.getElementById('desktop-header');
   if (dh && window.innerWidth >= 768) dh.style.display = 'flex';
