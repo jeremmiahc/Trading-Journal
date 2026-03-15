@@ -2615,18 +2615,6 @@ async function renderReview_DEPRECATED(){
 
 function renderAll(){renderConfluenceCorrelation();renderDashboard();renderLog();}
 
-async function init(){
-  var now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
-  var fd=document.getElementById('f-date');if(fd)fd.value=todayStr();
-  loadSettings();
-  await loadTrades();
-  setInterval(function(){if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();},60000);
-  loadForexFactory();
-}
-document.addEventListener('DOMContentLoaded', function() {
-  updateStatusBar();
-});
-init();
 
 async function renderDataManagement(){
   var reviewKeys=[];
@@ -3492,6 +3480,7 @@ async function init(){
   setInterval(function(){if(currentPage==='today')renderToday();},60000);
 }
 
+document.addEventListener('DOMContentLoaded', function() { updateStatusBar(); });
 init();
 </script>
 </body>
