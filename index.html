@@ -377,6 +377,15 @@ canvas#equity-chart { width: 100%; height: 160px; display: block; }
 .flip-hint { font-size: 9.5px; color: var(--text3); text-align: center; margin-top: 4px; }
 .pnlc-section { margin-bottom: 28px; }
 .pnlc-section-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; }
+.pnlc-tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--s2); border-radius: 8px; padding: 3px; width: fit-content; }
+.pnlc-tab { padding: 7px 18px; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; color: var(--text3); transition: all 0.15s; border: none; background: none; font-family: var(--sans); }
+.pnlc-tab.active { background: var(--white); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.pnlc-panel { display: none; }
+.pnlc-panel.active { display: block; }
+.pnlc-feed { display: flex; flex-direction: column; gap: 28px; padding-bottom: 40px; max-width: 560px; }
+.pnlc-feed-item { cursor: pointer; border-radius: 14px; will-change: transform; transition: box-shadow 0.15s ease; transform-style: preserve-3d; }
+.pnlc-feed-item:hover { box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+.pnlc-empty { font-size: 12px; color: var(--text3); padding: 20px 0; }
 .pnlc-theme-toggle{display:flex;align-items:center;gap:8px;margin-bottom:18px}
 .pnlc-theme-btn{font-size:11px;font-weight:500;padding:6px 14px;border-radius:6px;cursor:pointer;border:1px solid var(--line2);background:var(--s2);color:var(--text2);font-family:var(--sans);transition:all 0.15s}
 .pnlc-theme-btn.active{background:var(--text);color:var(--white);border-color:var(--text)}
@@ -1343,7 +1352,7 @@ function nav(page, el) {
   if (page === 'statistics') renderConfluenceCorrelation();
   var labels = {dashboard:'Dashboard',calendar:'Calendar',log:'Trade Log',new:'New Trade',statistics:'Statistics',compliance:'Compliance',settings:'Settings'};
   var tp = document.getElementById('tb-page'); if (tp) tp.textContent = labels[page] || page;
-  if (page === 'calendar') renderCalendar();
+  if (page === 'calendar') { renderCalendar(); loadForexFactory(); }
   if (page === 'statistics') renderStats();
   if (page === 'compliance') renderCompliance();
   if (page === 'dashboard') renderDashboard();
@@ -1798,6 +1807,7 @@ var ffLoaded = false;
 
 async function loadForexFactory() {
   if (ffLoaded) return;
+  ffLoaded = true; // set early to prevent concurrent calls, reset on error
   try {
     // Use FF calendar JSON API (public, no auth needed)
     var now = new Date();
@@ -1810,7 +1820,7 @@ async function loadForexFactory() {
     // Since FF doesn't have a public JSON API, we'll fetch via rss2json
     var rssUrl = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
     var controller = new AbortController();
-    var timeoutId = setTimeout(function(){ controller.abort(); }, 4000);
+    var timeoutId = setTimeout(function(){ controller.abort(); }, 8000);
     var r = await fetch(rssUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
     if (!r.ok) throw new Error('FF fetch failed');
@@ -1821,10 +1831,11 @@ async function loadForexFactory() {
         if (!ev.impact || ev.impact.toLowerCase() !== 'high') return;
         var d = null;
         if (ev.date) {
-          // Handle both ISO (2026-03-15T...) and MM/DD/YYYY or other formats
-          if (ev.date.indexOf('T') > 0) { d = ev.date.split('T')[0]; }
-          else if (ev.date.match(/^\d{4}-\d{2}-\d{2}/)) { d = ev.date.slice(0,10); }
-          else { try { var pd = new Date(ev.date); if(!isNaN(pd)) d = pd.toISOString().split('T')[0]; } catch(e){} }
+          try {
+            var pd = new Date(ev.date);
+            if (!isNaN(pd.getTime())) d = pd.toISOString().split('T')[0];
+          } catch(e2) {}
+          if (!d && ev.date.match(/^\d{4}-\d{2}-\d{2}/)) d = ev.date.slice(0,10);
         }
         if (!d) return;
         if (!ffEvents[d]) ffEvents[d] = [];
@@ -1835,6 +1846,7 @@ async function loadForexFactory() {
     renderCalendar();
   } catch(e) {
     // Silently fail - calendar works without FF data
+    ffLoaded = false; // allow retry
     console.warn('Forex Factory data unavailable:', e.message);
   }
 }
@@ -2142,8 +2154,17 @@ function initPnlCards(){
 }
 function renderDailyFeed(){var feed=document.getElementById('pnlc-daily-feed');if(!feed)return;if(!pnlDayDates.length){feed.innerHTML='<div class="pnlc-empty">No trades logged yet.</div>';return;}var html='';pnlDayDates.forEach(function(d){html+='<div class="pnlc-feed-item" data-type="daily" data-date="'+d+'" onmousemove="tiltCard(event,this)" onmouseleave="resetTilt(this)">'+buildDailyHtml(d)+'</div>';});feed.innerHTML=html;feed.querySelectorAll('.pnlc-feed-item').forEach(function(el){var startX,startY,dragging;el.addEventListener('mousedown',function(e){startX=e.clientX;startY=e.clientY;dragging=false;});el.addEventListener('mousemove',function(e){if(Math.abs(e.clientX-startX)>5||Math.abs(e.clientY-startY)>5)dragging=true;});el.addEventListener('click',function(e){if(dragging)return;if(e.target.closest('.pdc-scroll'))return;openPnlLb(this.dataset.type,this.dataset.date);});});}
 function renderWeeklyFeed(){var feed=document.getElementById('pnlc-weekly-feed');if(!feed)return;if(!pnlWeekKeys.length){feed.innerHTML='<div class="pnlc-empty">No trades logged yet.</div>';return;}var html='';pnlWeekKeys.forEach(function(d){html+='<div class="pnlc-feed-item" data-type="weekly" data-date="'+d+'" onmousemove="tiltCard(event,this)" onmouseleave="resetTilt(this)">'+buildWeeklyHtml(d)+'</div>';});feed.innerHTML=html;feed.querySelectorAll('.pnlc-feed-item').forEach(function(el){var startX,startY,dragging;el.addEventListener('mousedown',function(e){startX=e.clientX;startY=e.clientY;dragging=false;});el.addEventListener('mousemove',function(e){if(Math.abs(e.clientX-startX)>5||Math.abs(e.clientY-startY)>5)dragging=true;});el.addEventListener('click',function(e){if(dragging)return;if(e.target.closest('.pdc-scroll'))return;openPnlLb(this.dataset.type,this.dataset.date);});});}
-function tiltCard(e,el){var r=el.getBoundingClientRect();var rotX=(((e.clientY-r.top)/r.height)-0.5)*-14;var rotY=(((e.clientX-r.left)/r.width)-0.5)*14;el.style.transition='transform 0.08s ease';el.style.transform='perspective(700px) rotateX('+rotX+'deg) rotateY('+rotY+'deg) scale(1.03)';}
-function resetTilt(el){el.style.transition='transform 0.5s cubic-bezier(0.22,1,0.36,1), box-shadow 0.15s ease';el.style.transform='perspective(700px) rotateX(0deg) rotateY(0deg) scale(1)';}
+function tiltCard(e,el){
+  var r=el.getBoundingClientRect();
+  var x=(e.clientX-r.left)/r.width;
+  var y=(e.clientY-r.top)/r.height;
+  var rotX=(y-0.5)*-16;
+  var rotY=(x-0.5)*16;
+  el.style.transition='transform 0.05s ease';
+  el.style.transformOrigin='center center';
+  el.style.transform='perspective(900px) rotateX('+rotX+'deg) rotateY('+rotY+'deg) scale(1.02)';
+}
+function resetTilt(el){el.style.transition='transform 0.6s cubic-bezier(0.22,1,0.36,1)';el.style.transformOrigin='center center';el.style.transform='perspective(900px) rotateX(0deg) rotateY(0deg) scale(1)';}
 function openPnlLb(type,dateStr){pnlLbType=type;pnlLbDate=dateStr;var c=document.getElementById('pnlc-lightbox-card');if(c)c.innerHTML=type==='daily'?buildDailyHtml(dateStr):buildWeeklyHtml(dateStr);document.getElementById('pnlc-lightbox').classList.add('open');}
 function closePnlLightbox(){var lb=document.getElementById('pnlc-lightbox');if(lb)lb.classList.remove('open');}
 function downloadCardLb(){var card=document.getElementById('pnlc-lightbox-card').firstElementChild;if(!card)return;html2canvas(card,{backgroundColor:null,scale:2,useCORS:true,logging:false}).then(function(canvas){var a=document.createElement('a');a.download='nq-'+pnlLbType+'-'+pnlLbDate+'.png';a.href=canvas.toDataURL();a.click();});}
