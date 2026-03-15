@@ -3242,14 +3242,24 @@ function toast(msg,type){var el=document.getElementById('toast');if(!el)return;e
 // ── EXPORT ────────────────────────────────────────────────────────────────────
 function exportCSV(){
   if(!trades.length){toast('No trades','red');return;}
-  var hdrs=['id','date','direction','instrument','outcome','confluences'];
-  var rows=trades.map(function(t){return[t.id,t.date,t.direction,t.instrument||'NQ',t.outcome,'"'+JSON.stringify(t.confluences||{}).replace(/"/g,'""')+'"'].join(',');});
-  dl('trades_'+todayStr()+'.csv',[hdrs.join(',')].concat(rows).join('
-'),'text/csv');
+  var lines=['id,date,direction,instrument,outcome,r,pnl'];
+  trades.forEach(function(t){
+    lines.push([t.id,t.date,t.direction,t.instrument||'NQ',t.outcome,t.r_result||'',t.pnl_usd||''].join(','));
+  });
+  dlFile('trades_'+todayStr()+'.csv', lines.join('\n'), 'text/csv');
   toast('CSV exported','green');
 }
-function exportJSON(){if(!trades.length){toast('No trades','red');return;}dl('trades_'+todayStr()+'.json',JSON.stringify(trades,null,2),'application/json');toast('JSON exported','green');}
-function dl(filename,content,type){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:type}));a.download=filename;a.click();}
+function exportJSON(){
+  if(!trades.length){toast('No trades','red');return;}
+  dlFile('trades_'+todayStr()+'.json', JSON.stringify(trades,null,2), 'application/json');
+  toast('JSON exported','green');
+}
+function dlFile(filename, data, type){
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([data],{type:type}));
+  a.download=filename;
+  a.click();
+}
 
 // ── CLEAR ALL ─────────────────────────────────────────────────────────────────
 async function clearAll(){
