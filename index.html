@@ -804,44 +804,74 @@ body {
         </div>
       </div>
 
-      <div>
-        <div class="section-header"><div class="section-title">Quick Actions</div></div>
-        <div class="quick-grid">
-          <div class="quick-btn primary" onclick="navTo('log')">
-            <div class="quick-icon"><svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-            <div class="quick-btn-label">Log a Trade</div>
-            <div class="quick-btn-sub">Record today's trade</div>
-          </div>
-          <div class="quick-btn" onclick="startEndSession()" id="qa-end-session" style="display:none">
-            <div class="quick-icon"><svg width="16" height="16" fill="none" stroke="#991b1b" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-            <div class="quick-btn-label" style="color:var(--red)">End Session</div>
-            <div class="quick-btn-sub">Debrief & weekly review</div>
-          </div>
-          <div class="quick-btn" onclick="navTo('stats')">
-            <div class="quick-icon"><svg width="16" height="16" fill="none" stroke="var(--text2)" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-            <div class="quick-btn-label">Statistics</div>
-            <div class="quick-btn-sub">Win rate, R, equity</div>
-          </div>
-          <div class="quick-btn" onclick="navTo('cards')">
-            <div class="quick-icon"><svg width="16" height="16" fill="none" stroke="var(--text2)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/></svg></div>
-            <div class="quick-btn-label">PnL Cards</div>
-            <div class="quick-btn-sub">Share your results</div>
-          </div>
-        </div>
-      </div>
-
+      <div class="today-full">
       <div class="card" id="equity-wrap">
         <div class="card-header">
           <div class="card-label">Equity Curve</div>
           <div style="font-size:11px;color:var(--text3)" id="equity-meta">—</div>
         </div>
         <div style="padding:16px 16px 8px">
-          <div id="equity-svg-wrap" style="width:100%;height:120px;position:relative"></div>
+          <div id="equity-svg-wrap" style="width:100%;height:320px;position:relative"></div>
           <div id="equity-trade-dots" style="display:flex;gap:0;margin-top:6px;overflow:hidden;border-radius:4px;height:6px"></div>
           <div style="display:flex;justify-content:space-between;margin-top:8px">
             <div id="equity-start-label" style="font-size:9px;color:var(--text4)"></div>
             <div id="equity-end-label" style="font-size:9px;color:var(--text4)"></div>
           </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="today-full">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div onclick="navTo('log')" style="background:var(--text);border-radius:16px;padding:20px 16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;box-shadow:0 2px 8px rgba(24,22,16,0.25);transition:all 0.15s" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 16px rgba(24,22,16,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(24,22,16,0.25)'">
+            <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center">
+              <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#fff;letter-spacing:-0.2px">Log a Trade</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Record your entry</div>
+            </div>
+          </div>
+          <div onclick="startEndSession()" id="qa-end-session" style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.04);transition:all 0.15s" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='';this.style.boxShadow='0 1px 3px rgba(0,0,0,0.04)'">
+            <div style="width:34px;height:34px;border-radius:9px;background:var(--red-bg);border:1px solid var(--red-mid);display:flex;align-items:center;justify-content:center">
+              <svg width="16" height="16" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);letter-spacing:-0.2px">End Session</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Debrief & review</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Streak + Session Rules -->
+      <div class="today-full">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-label">Streak & Rules</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border)">
+            <div style="padding:16px 18px;border-right:1px solid var(--border)">
+              <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4);margin-bottom:6px">Current Streak</div>
+              <div style="font-family:var(--serif);font-size:36px;letter-spacing:-1.5px;line-height:1" id="today-streak">—</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px" id="today-streak-sub">No trades yet</div>
+            </div>
+            <div style="padding:16px 18px">
+              <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4);margin-bottom:6px">All-Time Win Rate</div>
+              <div style="font-family:var(--serif);font-size:36px;letter-spacing:-1.5px;line-height:1" id="today-allwr">—</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px" id="today-allwr-sub">All trades</div>
+            </div>
+          </div>
+          <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px" id="today-rules-list"></div>
+        </div>
+      </div>
+
+      <!-- Last 7 Days -->
+      <div class="today-full">
+        <div class="section-header"><div class="section-title">Last 7 Days</div></div>
+        <div class="card">
+          <div style="padding:16px 18px" id="today-week-bars"></div>
         </div>
       </div>
 
@@ -1402,7 +1432,7 @@ function navTo(page) {
   if(esD) { var tt=trades.filter(function(t){return t.date===todayStr();}); esD.style.display=tt.length&&page==='today'?'block':'none'; }
   if (page === 'today') renderToday();
   if (page === 'history') renderHistory();
-  if (page === 'stats') { renderStatsPage(); renderConfluenceCorrelation(); setTimeout(renderEquity, 50); }
+  if (page === 'stats') { renderStatsPage(); renderConfluenceCorrelation(); }
   if (page === 'cards') initPnlCards();
   if (page === 'more') { applySettings(); loadAudioSettings(); var ec=document.getElementById('export-count'); if(ec) ec.textContent=trades.length+' trades'; }
   if (page === 'log') setTimeout(setupDrop, 50);
@@ -1440,10 +1470,83 @@ function renderToday() {
   var rEl = document.getElementById('today-r'); if(rEl){rEl.textContent=tt.length?(totalR>=0?'+':'')+totalR.toFixed(2)+'R':'—';rEl.className='stat-item-v'+(totalR>0?' pos':totalR<0?' neg':'');}
   var cEl = document.getElementById('today-count'); if(cEl){cEl.textContent=tt.length+' / 2';cEl.className='stat-item-v'+(tt.length>=2?' neg':'');}
   var esBtn = document.getElementById('end-session-btn'); if(esBtn) esBtn.style.display=tt.length?'block':'none';
-  var qaBtn = document.getElementById('qa-end-session'); if(qaBtn) qaBtn.style.display=tt.length?'flex':'none';
+  var qaBtn = document.getElementById('qa-end-session'); if(qaBtn) qaBtn.style.opacity=tt.length?'1':'0.4';
   var list = document.getElementById('today-trade-list'); if (!list) return;
   list.innerHTML = tt.length ? tt.map(function(t){return buildTradeRow(t);}).join('') : '<div class="empty"><div class="empty-title">No trades today</div><div class="empty-sub">Tap Log to record your first trade</div></div>';
   setTimeout(renderEquity, 50);
+
+  // Streak
+  var curCount=0, curType='';
+  for(var i=0;i<trades.length;i++){if(i===0){curType=trades[i].outcome;curCount=1;}else if(trades[i].outcome===curType){curCount++;}else break;}
+  var strkEl=document.getElementById('today-streak');
+  var strkSub=document.getElementById('today-streak-sub');
+  if(strkEl){
+    if(!trades.length){strkEl.textContent='—';strkEl.style.color='var(--text3)';}
+    else{strkEl.textContent=curCount+(curType==='Win'?'W':'L');strkEl.style.color=curType==='Win'?'var(--green)':curType==='Loss'?'var(--red)':'var(--text3)';}
+  }
+  if(strkSub) strkSub.textContent = curType==='Win'?'Win streak 🔥':curType==='Loss'?'Loss streak — stay patient':'—';
+
+  // All-time WR
+  var allW=trades.filter(function(t){return t.outcome==='Win';}).length;
+  var allL=trades.filter(function(t){return t.outcome==='Loss';}).length;
+  var allWR=(allW+allL)>0?Math.round(allW/(allW+allL)*100):null;
+  var awEl=document.getElementById('today-allwr');
+  var awSub=document.getElementById('today-allwr-sub');
+  if(awEl){awEl.textContent=allWR!==null?allWR+'%':'—';awEl.style.color=allWR>=55?'var(--green)':allWR!==null&&allWR<45?'var(--red)':'var(--text)';}
+  if(awSub) awSub.textContent=(allW+allL)+' trades · '+allW+'W '+allL+'L';
+
+  // Session rules checklist
+  var rl=document.getElementById('today-rules-list');
+  if(rl){
+    var rules=[
+      {label:'Max 2 trades today', pass:tt.length<=2, note:tt.length+' / 2'},
+      {label:'No trading after 10:30 AM', pass:!tt.some(function(t){var m=t.notes&&t.notes.match(/Time: (\d+):(\d+)/);return m&&(parseInt(m[1])*60+parseInt(m[2]))>=630;}), note:'Session window'},
+      {label:'All core confluences confirmed', pass:tt.length>0&&tt.every(function(t){var c=t.confluences||{};return c['LVN']&&c['Bookmap Stack']&&c['CVD Divergence'];}), note:tt.length?'LVN + Bookmap + CVD':'No trades yet'},
+      {label:'Stop 2 losses rule', pass:tt.filter(function(t){return t.outcome==='Loss';}).length<2, note:tt.filter(function(t){return t.outcome==='Loss';}).length+' losses today'},
+    ];
+    rl.innerHTML=rules.map(function(r){
+      var col=r.pass?'var(--green)':'var(--red)';
+      var icon=r.pass?'✓':'✗';
+      return '<div style="display:flex;align-items:center;gap:10px">'+
+        '<div style="width:20px;height:20px;border-radius:50%;background:'+(r.pass?'var(--green-bg)':'var(--red-bg)')+';border:1px solid '+(r.pass?'var(--green-mid)':'var(--red-mid)')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:'+col+';flex-shrink:0">'+icon+'</div>'+
+        '<div style="flex:1;font-size:13px;color:var(--text2);font-weight:500">'+r.label+'</div>'+
+        '<div style="font-size:11px;color:var(--text3)">'+r.note+'</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  // Last 7 days bars
+  var wb=document.getElementById('today-week-bars');
+  if(wb){
+    var days7=[];
+    for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);days7.push(d.toISOString().split('T')[0]);}
+    var maxPnl7=0;
+    var day7data=days7.map(function(d){
+      var dt=trades.filter(function(t){return t.date===d;});
+      var pnl=dt.reduce(function(a,t){return a+(t.pnl_usd||0);},0);
+      var r=dt.reduce(function(a,t){return a+(t.r_result||0);},0);
+      var w=dt.filter(function(t){return t.outcome==='Win';}).length;
+      var l=dt.filter(function(t){return t.outcome==='Loss';}).length;
+      if(Math.abs(pnl)>maxPnl7) maxPnl7=Math.abs(pnl);
+      return{date:d,pnl:pnl,r:r,wins:w,losses:l,count:dt.length};
+    });
+    if(maxPnl7===0) maxPnl7=1;
+    var days7names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    wb.innerHTML='<div style="display:flex;gap:6px;align-items:flex-end;height:80px">'+
+      day7data.map(function(d){
+        var isToday=d.date===todayStr();
+        var pct=Math.max(4,Math.round(Math.abs(d.pnl)/maxPnl7*72));
+        var col=d.pnl>0?'var(--green)':d.pnl<0?'var(--red)':'var(--surface3)';
+        var dayName=days7names[new Date(d.date+'T12:00:00').getDay()];
+        var pnlStr=d.count?(d.pnl>=0?'+$':'-$')+Math.abs(d.pnl).toLocaleString():'—';
+        return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">'+
+          '<div style="font-size:9px;color:var(--text3);font-weight:500">'+pnlStr+'</div>'+
+          '<div style="width:100%;height:'+pct+'px;background:'+col+';border-radius:4px;opacity:'+(d.count?1:0.15)+';min-height:4px;transition:height 0.4s"></div>'+
+          '<div style="font-size:9px;font-weight:'+(isToday?'700':'500')+';color:'+(isToday?'var(--text)':'var(--text3)')+'">'+dayName+'</div>'+
+        '</div>';
+      }).join('')+
+    '</div>';}
+
 }
 
 function buildTradeRow(t) {
@@ -1567,7 +1670,7 @@ function renderEquity() {
   if(meta)meta.textContent=(totalR>=0?'+':'')+totalR.toFixed(2)+'R · '+rTrades.length+' trades';
   var startLbl=document.getElementById('equity-start-label');var endLbl=document.getElementById('equity-end-label');
   if(startLbl)startLbl.textContent=rTrades[0]?rTrades[0].date:'';if(endLbl)endLbl.textContent=rTrades[rTrades.length-1]?rTrades[rTrades.length-1].date:'';
-  var W=wrap.offsetWidth||wrap.parentElement?.offsetWidth||600,H=120;var pad={t:12,r:8,b:20,l:38};var cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;var n=cumR.length;
+  var W=wrap.offsetWidth||wrap.parentElement?.offsetWidth||600,H=320;var pad={t:12,r:8,b:20,l:38};var cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;var n=cumR.length;
   function sx(i){return pad.l+(i/(n-1))*cW;}function sy(v){return pad.t+cH-((v-minR)/range)*cH;}
   var isPos=totalR>=0;var lineCol=isPos?'#166534':'#991b1b';var fillId='ec-fill-'+Date.now();
   var pathD='M'+sx(0)+','+sy(cumR[0]);for(var i=1;i<n;i++)pathD+=' L'+sx(i)+','+sy(cumR[i]);
@@ -1597,7 +1700,12 @@ function openModal(id) {
   var editBtn=document.getElementById('modal-edit-btn'); if(editBtn)editBtn.onclick=function(){editTrade(id);};
   document.getElementById('modal').classList.add('open'); document.body.style.overflow='hidden';
 }
-function closeModal(){document.getElementById('modal').classList.remove('open');document.body.style.overflow='';}
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow='';
+  var del=document.getElementById('modal-del'); if(del) del.style.display='';
+  var edit=document.getElementById('modal-edit-btn'); if(edit) edit.style.display='';
+}
 
 function loadSettings(){try{settings=JSON.parse(localStorage.getItem('atj_s')||'{}');}catch(e){settings={};} applySettings();}
 function saveSetting(k,v){settings[k]=v;localStorage.setItem('atj_s',JSON.stringify(settings));applySettings();}
@@ -1799,8 +1907,50 @@ async function init(){
   setInterval(function(){if(currentPage==='today')renderToday();},60000);
 }
 
-document.addEventListener('DOMContentLoaded',function(){updateStatusBar();});
-init();
+function showRuleCard() {
+  var rules = [
+    { label: 'LVN confirmed', core: true },
+    { label: 'Bookmap stack present', core: true },
+    { label: 'CVD divergence', core: true },
+    { label: 'Absorption candle visible', core: false },
+    { label: 'HTF POI alignment', core: false },
+    { label: 'Target identified before entry', core: false },
+    { label: 'Within session window (6:45–10:30)', core: false },
+    { label: 'Max 2 trades today', core: false },
+  ];
+  var mt = document.getElementById('modal-title');
+  if(mt) mt.innerHTML = '<span style="font-size:15px">📋</span> Entry Checklist';
+  var mb = document.getElementById('modal-body');
+  if(mb) mb.innerHTML = '<div class="modal-section"><div class="modal-section-label">Core — all required</div>' +
+    rules.filter(function(r){return r.core;}).map(function(r){
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">' +
+        '<div style="width:20px;height:20px;border-radius:6px;border:2px solid var(--amber-mid);background:var(--amber-bg);flex-shrink:0"></div>' +
+        '<div style="font-size:13px;font-weight:500;color:var(--text)">' + r.label + '</div>' +
+        '<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-mid);margin-left:auto">CORE</span>' +
+      '</div>';
+    }).join('') + '</div>' +
+    '<div class="modal-section"><div class="modal-section-label">Supporting — stack the edge</div>' +
+    rules.filter(function(r){return !r.core;}).map(function(r){
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">' +
+        '<div style="width:20px;height:20px;border-radius:6px;border:2px solid var(--border2);background:var(--surface2);flex-shrink:0"></div>' +
+        '<div style="font-size:13px;color:var(--text2)">' + r.label + '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+  var del = document.getElementById('modal-del'); if(del) del.style.display='none';
+  var edit = document.getElementById('modal-edit-btn'); if(edit) edit.style.display='none';
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function shareToday() {
+  var today = todayStr();
+  var todayTrades = trades.filter(function(t){return t.date===today;});
+  if(!todayTrades.length){toast('No trades today to share','red');return;}
+  pnlDayDates = [...new Set(trades.map(function(t){return t.date;}).filter(Boolean))].sort().reverse();
+  openPnlLb('daily', today);
+}
+
+
 </script>
 </body>
 </html>
