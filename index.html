@@ -1901,25 +1901,29 @@ async function loadTrades(){
   try{
     var url = getSupaUrl() + '/rest/v1/trades?select=*&order=created_at.desc';
     var key = getSupaKey();
-    toast('Fetching from: ' + getSupaUrl().slice(8,30), '');
+    console.log('LOADING FROM:', url);
+    console.log('KEY starts with:', key.slice(0,20));
+    console.log('settings.supaUrl:', settings.supaUrl);
+    console.log('settings.supaKey:', settings.supaKey ? 'set' : 'empty');
     var r = await fetch(url, { headers: { 'apikey': key, 'Authorization': 'Bearer ' + key } });
     var text = await r.text();
-    toast('HTTP ' + r.status + ' · ' + text.slice(0,60), r.ok ? 'green' : 'red');
+    console.log('RESPONSE status:', r.status, 'body:', text.slice(0, 200));
     if(!r.ok) throw new Error('HTTP ' + r.status + ': ' + text.slice(0,200));
     trades = JSON.parse(text);
-    if(!Array.isArray(trades)){ toast('Bad response: ' + text.slice(0,80), 'red'); trades=[]; }
+    if(!Array.isArray(trades)){ trades=[]; }
     setConn('ok','Connected · '+trades.length+' trades loaded');
-    // Show count in greeting permanently
     var gr = document.getElementById('status-greeting'); if(gr) gr.textContent = gr.textContent + ' · ' + trades.length + ' trades';
     renderToday();
     renderHistory();
     renderStatsPage();
     renderConfluenceCorrelation();
   }catch(e){
+    console.error('LOAD ERROR:', e);
     toast('Error: ' + e.message.slice(0,80), 'red');
     setConn('err', e.message);
     trades=[];
-    renderAll();
+    renderToday();
+    renderHistory();
   }
 }
 
