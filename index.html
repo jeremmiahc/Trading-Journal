@@ -1363,7 +1363,7 @@ async function saveTrade() {
       trades.unshift(newTrade);
     }
     clearForm();
-    nav('log', document.querySelectorAll('.sb-item')[2]);
+    navTo('today');
     if ((trade.outcome || '').toLowerCase() === 'win') playWinSound();
     toast('Trade saved', 'green');
   } catch(e) { toast('Save failed: ' + (e.message || JSON.stringify(e)), 'red'); }
@@ -1908,7 +1908,11 @@ async function loadTrades(){
 async function init(){
   var now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
   var fd=document.getElementById('f-date');if(fd)fd.value=todayStr();
-  loadSettings();updateStatusBar();
+  loadSettings();
+  settings.supaUrl = SUPA_URL;
+  settings.supaKey = SUPA_KEY;
+  localStorage.setItem('atj_s', JSON.stringify(settings));
+  updateStatusBar();
   await loadTrades();updateStatusBar();
   var dh=document.getElementById('desktop-header');if(dh&&window.innerWidth>=768)dh.style.display='flex';
   window.addEventListener('resize',function(){var dh2=document.getElementById('desktop-header');if(dh2)dh2.style.display=(window.innerWidth>=768&&currentPage!=='today')?'flex':'none';if(currentPage==='today'||currentPage==='stats')renderEquity();});
