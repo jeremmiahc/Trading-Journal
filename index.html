@@ -983,12 +983,35 @@ body {
 
         <div class="form-section">
           <div class="form-section-label">Screenshots</div>
-          <div class="ss-drop" id="ss-drop" onclick="document.getElementById('f-ss').click()">
-            <input type="file" id="f-ss" multiple accept="image/*" style="display:none" onchange="handleSS(this)">
-            <div style="font-size:13px;font-weight:500;color:var(--text2);margin-bottom:3px">Tap to upload screenshots</div>
-            <div style="font-size:11px;color:var(--text3)">PNG, JPG · multiple files supported</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div class="form-label" style="margin-bottom:6px">Order Flow</div>
+              <div class="ss-drop" id="ss-drop-of" onclick="document.getElementById('f-ss-of').click()">
+                <input type="file" id="f-ss-of" multiple accept="image/*" style="display:none" onchange="handleSS(this,'of')">
+                <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">Footprint / CVD / Delta</div>
+                <div style="font-size:10px;color:var(--text3)">PNG, JPG</div>
+              </div>
+              <div class="ss-previews" id="ss-previews-of"></div>
+            </div>
+            <div>
+              <div class="form-label" style="margin-bottom:6px">Bookmap</div>
+              <div class="ss-drop" id="ss-drop-bm" onclick="document.getElementById('f-ss-bm').click()">
+                <input type="file" id="f-ss-bm" multiple accept="image/*" style="display:none" onchange="handleSS(this,'bm')">
+                <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">Bookmap heatmap</div>
+                <div style="font-size:10px;color:var(--text3)">PNG, JPG</div>
+              </div>
+              <div class="ss-previews" id="ss-previews-bm"></div>
+            </div>
+            <div>
+              <div class="form-label" style="margin-bottom:6px">Other</div>
+              <div class="ss-drop" id="ss-drop" onclick="document.getElementById('f-ss').click()">
+                <input type="file" id="f-ss" multiple accept="image/*" style="display:none" onchange="handleSS(this,'other')">
+                <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">Chart, notes, anything else</div>
+                <div style="font-size:10px;color:var(--text3)">PNG, JPG · multiple files supported</div>
+              </div>
+              <div class="ss-previews" id="ss-previews"></div>
+            </div>
           </div>
-          <div class="ss-previews" id="ss-previews"></div>
         </div>
 
         <div class="form-actions">
@@ -1234,7 +1257,7 @@ async function sbDeleteAll(table) {
   if (!r.ok) throw new Error('HTTP ' + r.status);
 }
 
-var trades = [], settings = {}, ssFiles = [], currentPage = 'today', historyFilter = 'all';
+var trades = [], settings = {}, ssFiles = [], ssFilesOf = [], ssFilesBm = [], currentPage = 'today', historyFilter = 'all';
 var pnlCardTheme = 'dark', pnlDayDates = [], pnlWeekKeys = [], pnlLbType = 'daily', pnlLbDate = '';
 var audioTracks = [], currentAudio = null, fadeOutTimer = null;
 var calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
@@ -1263,15 +1286,22 @@ function getSelectedConfs() {
 }
 
 async function uploadScreenshots() {
-  if (!ssFiles.length) return [];
+  var allFiles = [
+    {files: ssFilesOf, tag: 'of'},
+    {files: ssFilesBm, tag: 'bm'},
+    {files: ssFiles, tag: 'other'}
+  ];
   var urls = [];
-  for (var i = 0; i < ssFiles.length; i++) {
-    var file = ssFiles[i]; if (!file || !file.name) continue;
-    var ext = file.name.split('.').pop() || 'jpg';
-    var path = 'trade-' + Date.now() + '-' + i + '.' + ext;
-    var res = await fetch(getSupaUrl() + '/storage/v1/object/screenshots/' + path, { method: 'POST', headers: { 'apikey': getSupaKey(), 'Authorization': 'Bearer ' + getSupaKey(), 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' }, body: file });
-    if (!res.ok) throw new Error('Screenshot upload failed');
-    urls.push(getSupaUrl() + '/storage/v1/object/public/screenshots/' + path);
+  for (var g = 0; g < allFiles.length; g++) {
+    var group = allFiles[g];
+    for (var i = 0; i < group.files.length; i++) {
+      var file = group.files[i]; if (!file || !file.name) continue;
+      var ext = file.name.split('.').pop() || 'jpg';
+      var path = 'trade-' + group.tag + '-' + Date.now() + '-' + i + '.' + ext;
+      var res = await fetch(getSupaUrl() + '/storage/v1/object/screenshots/' + path, { method: 'POST', headers: { 'apikey': getSupaKey(), 'Authorization': 'Bearer ' + getSupaKey(), 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' }, body: file });
+      if (!res.ok) throw new Error('Screenshot upload failed');
+      urls.push(getSupaUrl() + '/storage/v1/object/public/screenshots/' + path);
+    }
   }
   return urls;
 }
@@ -1309,7 +1339,7 @@ async function saveTrade() {
   btn.textContent = 'Uploading...'; btn.disabled = true;
   try {
     var screenshotUrls = [];
-    if (ssFiles.length) { btn.textContent = 'Uploading...'; screenshotUrls = await uploadScreenshots(); }
+    if (ssFiles.length || ssFilesOf.length || ssFilesBm.length) { btn.textContent = 'Uploading...'; screenshotUrls = await uploadScreenshots(); }
     var existingEl = document.getElementById('ss-existing');
     var existingUrls = existingEl ? JSON.parse(existingEl.dataset.urls||'[]') : [];
     trade.screenshot_urls = existingUrls.concat(screenshotUrls);
@@ -1346,21 +1376,23 @@ function getToggle(g) {
   return found;
 }
 
-function handleSS(input) {
+function handleSS(input, type) {
+  var arr = type==='of' ? ssFilesOf : type==='bm' ? ssFilesBm : ssFiles;
+  var previewId = type==='of' ? 'ss-previews-of' : type==='bm' ? 'ss-previews-bm' : 'ss-previews';
   Array.from(input.files).forEach(function(file) {
-    var idx = ssFiles.length; ssFiles.push(file);
+    var idx = arr.length; arr.push(file);
     var reader = new FileReader();
-    reader.onload = function(e) { addThumb(e.target.result, idx); };
+    reader.onload = function(e) { addThumb(e.target.result, idx, arr, previewId); };
     reader.readAsDataURL(file);
   });
   input.value = '';
 }
-function addThumb(src, idx) {
-  var container = document.getElementById('ss-previews'); if (!container) return;
+function addThumb(src, idx, arr, previewId) {
+  var container = document.getElementById(previewId || 'ss-previews'); if (!container) return;
   var wrap = document.createElement('div'); wrap.className = 'ss-thumb'; wrap.setAttribute('data-idx', idx);
   var img = document.createElement('img'); img.src = src;
   var rm = document.createElement('div'); rm.className = 'ss-remove'; rm.textContent = '×';
-  rm.onclick = function() { ssFiles[idx] = null; wrap.remove(); };
+  rm.onclick = function() { arr[idx] = null; wrap.remove(); };
   wrap.appendChild(img); wrap.appendChild(rm); container.appendChild(wrap);
 }
 
@@ -1712,7 +1744,8 @@ function clearForm(){
   document.querySelectorAll('[data-core="1"]').forEach(function(b){b.className='btt sel-core';});
   var nq=document.querySelector('[data-g="instrument"][data-v="NQ"]');if(nq)nq.className='btt sel-core';
   var warn=document.getElementById('core-warn');if(warn)warn.style.display='none';
-  ssFiles=[];var sp=document.getElementById('ss-previews');if(sp)sp.innerHTML='';
+  ssFiles=[];ssFilesOf=[];ssFilesBm=[];
+  ['ss-previews','ss-previews-of','ss-previews-bm'].forEach(function(id){var sp=document.getElementById(id);if(sp)sp.innerHTML='';});
 }
 
 function openLightbox(src){var ov=document.getElementById('ss-overlay');var img=document.getElementById('ss-overlay-img');if(!ov||!img)return;img.src=src;ov.style.display='flex';document.body.style.overflow='hidden';}
