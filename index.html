@@ -1213,8 +1213,8 @@ body {
 const SUPA_URL = 'https://najvjcciafmorqxsuhfi.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hanZqY2NpYWZtb3JxeHN1aGZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTcwNjAsImV4cCI6MjA4ODE3MzA2MH0.Zah3ounKNI_ww316dOBr39eLVlZN_G5TCq6nxghXSTs';
 
-function getSupaUrl() { return (settings && settings.supaUrl) ? settings.supaUrl : SUPA_URL; }
-function getSupaKey() { return (settings && settings.supaKey) ? settings.supaKey : SUPA_KEY; }
+function getSupaUrl() { return SUPA_URL; }
+function getSupaKey() { return SUPA_KEY; }
 
 async function sbSelect(table, order) {
   var url = getSupaUrl() + '/rest/v1/' + table + '?select=*&order=' + (order||'created_at.desc');
