@@ -99,7 +99,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding: 20px 16px calc(var(--tab-bar-h) + 24px);
+  padding: 20px 16px calc(var(--tab-bar-h) + 32px);
 }
 .scroll-area::-webkit-scrollbar { width: 0; }
 @media (min-width: 768px) {
@@ -1802,7 +1802,7 @@ function buildWeeklyHtml(dateStr){
   return'<div class="pcard '+th+'"><div class="pc-week-header"><div><div class="pc-wordmark">NQ Futures Journal</div><div class="pc-week-range">'+monStr+' – '+friStr+'</div></div><div class="pc-week-pnl '+(isPos?'pos':'neg')+'">'+pnlStr+'</div></div><div class="pc-bars">'+bars+'</div><div class="pc-trades" style="padding-bottom:10px"><div class="pc-trades-label">Best trade</div><div class="pc-trade-row"><span class="pc-t-dir '+(best.direction==='Long'?'l':'s')+'">'+(best.direction||'—').toUpperCase()+'</span><span class="pc-t-inst">'+(best.instrument||'NQ')+'</span><span class="pc-t-time">'+(best.date?new Date(best.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):'—')+'</span><span class="pc-t-r pos">'+bestR+'</span></div></div><div class="pc-week-footer"><div class="pc-wf"><div class="pc-wf-l">Total R</div><div class="pc-wf-v '+(totalR>=0?'pos':'')+'">'+rStr+'</div></div><div class="pc-wf"><div class="pc-wf-l">Win rate</div><div class="pc-wf-v '+(wr>=50?'pos':'')+'">'+wr+'%</div></div><div class="pc-wf"><div class="pc-wf-l">Trades</div><div class="pc-wf-v">'+wt.length+'</div></div><div class="pc-wf"><div class="pc-wf-l">Net P&amp;L</div><div class="pc-wf-v '+(isPos?'pos':'')+'">'+pnlStr+'</div></div></div></div>';
 }
 
-function toggleTabBar(){var wrap=document.getElementById('tab-bar-wrap');if(!wrap)return;var hidden=wrap.classList.toggle('hidden');var scroll=document.getElementById('scroll-area');if(scroll)scroll.style.paddingBottom=hidden?'40px':'';}
+function toggleTabBar(){var wrap=document.getElementById('tab-bar-wrap');if(!wrap)return;var hidden=wrap.classList.toggle('hidden');var scroll=document.getElementById('scroll-area');if(scroll)scroll.style.paddingBottom=hidden?'40px':'calc(var(--tab-bar-h) + 32px)';}
 
 async function loadTrades(){
   setConn('loading','Fetching trades...');
