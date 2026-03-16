@@ -602,10 +602,10 @@ body {
 .pcard.dark .pc-stat-v{color:#504840}.pcard.light .pc-stat-v{color:#8a8070}
 .pcard.dark .pc-stat-v.pos{color:#22c55e}.pcard.dark .pc-stat-v.neg{color:#ef4444}
 .pcard.light .pc-stat-v.pos{color:#166534}.pcard.light .pc-stat-v.neg{color:#991b1b}
-.pc-shots{display:grid;grid-template-columns:repeat(2,1fr);gap:2px}
+.pc-shots{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;max-height:320px;overflow:hidden}
 .pcard.dark .pc-shots{border-bottom:1px solid #161614}.pcard.light .pc-shots{border-bottom:1px solid #f0ede8}
-.pc-shot{width:100%;height:150px;position:relative;overflow:hidden}
-.pc-shot:first-child:last-child{grid-column:1/-1;height:200px}
+.pc-shot{width:100%;height:140px;position:relative;overflow:hidden}
+.pc-shot:first-child:last-child{grid-column:1/-1;height:180px}
 .pc-shot:nth-child(odd):last-child{grid-column:1/-1}
 .pcard.dark .pc-shot{background:#0d0d0b}.pcard.light .pc-shot{background:#f8f6f2}
 .pc-shot img{width:100%;height:100%;object-fit:cover;display:block}
@@ -1760,6 +1760,7 @@ function buildDailyHtml(dateStr){
   var pnlStr=(isPos?'+$':'-$')+Math.abs(totalPnl).toLocaleString();var rStr=(totalR>=0?'+':'')+totalR.toFixed(2)+'R';
   var dl=new Date(dateStr+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',year:'numeric'});
   var shots=[];dt.forEach(function(t){var s=t.screenshot_urls||t.screenshots||[];if(typeof s==='string'){try{s=JSON.parse(s);}catch(e){s=[];}}s.forEach(function(u){if(u)shots.push({url:u,outcome:t.outcome,r:t.r_result});});});
+  shots=shots.slice(0,4);
   var ssHtml=shots.map(function(s){var bc=s.outcome==='Win'?'w':'l';var rc=s.r!=null?(s.r>0?'pos':'neg'):'';var rs=s.r!=null?(s.r>0?'+':'')+s.r+'R':'';return'<div class="pc-shot"><img src="'+s.url+'" loading="lazy"><div class="pc-shot-badge '+bc+'">'+s.outcome.toUpperCase()+'</div>'+(rs?'<div class="pc-shot-r '+rc+'">'+rs+'</div>':'')+'</div>';}).join('');
   var coreKeys=['LVN','Bookmap Stack','CVD Divergence'];
   var tradeRows=dt.map(function(t){var dir=t.direction==='Long'?'l':'s';var rVal=t.r_result!=null?(t.r_result>0?'+':'')+t.r_result+'R':'—';var rCls=t.r_result>0?'pos':t.r_result<0?'neg':'';var c=t.confluences||{};var confPills=Object.keys(c).filter(function(k){return c[k];}).slice(0,5).map(function(k){var isCore=coreKeys.includes(k);var label=k==='Bookmap Stack'?'Bookmap':k;return'<span class="pc-t-conf'+(isCore?' core':'')+'">'+label+'</span>';}).join('');var sessStr=t.session||'';return'<div class="pc-trade-row"><span class="pc-t-dir '+dir+'">'+t.direction.toUpperCase()+'</span><span class="pc-t-inst">'+(t.instrument||'NQ')+'</span><span class="pc-t-time">'+sessStr+'</span><div class="pc-t-confs">'+confPills+'</div><span class="pc-t-r '+rCls+'">'+rVal+'</span></div>';}).join('');
