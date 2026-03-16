@@ -1895,6 +1895,7 @@ async function loadTrades(){
   try{
     trades = await sbSelect('trades','created_at.desc');
     setConn('ok','Connected · '+trades.length+' trades');
+    toast(trades.length + ' trades loaded', trades.length > 0 ? 'green' : 'red');
     renderAll();
   }catch(e){setConn('err',e.message);trades=[];renderAll();}
 }
