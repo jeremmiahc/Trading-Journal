@@ -110,7 +110,7 @@ body {
 }
 
 /* ── PAGES ── */
-.page { display: none; flex-direction: column; gap: 14px; max-width: 860px; width: 100%; }
+.page { display: none; flex-direction: column; gap: 14px; max-width: 860px; width: 100%; padding-bottom: 20px; }
 .page.active { display: flex; animation: pageIn 0.2s cubic-bezier(0.22,1,0.36,1) both; }
 @keyframes pageIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
@@ -409,7 +409,7 @@ body {
 .pnlc-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-weight: 600; }
 .pnlc-panel { display: none; }
 .pnlc-panel.active { display: block; }
-.pnlc-feed { display: grid; grid-template-columns: 1fr; gap: 20px; padding-bottom: 20px; }
+.pnlc-feed { display: grid; grid-template-columns: 1fr; gap: 20px; padding-bottom: 40px; }
 @media (min-width: 900px) { .pnlc-feed { grid-template-columns: 1fr 1fr; } }
 .pnlc-feed-item { cursor: pointer; border-radius: 16px; transition: transform 0.15s; }
 .pnlc-feed-item:active { transform: scale(0.98); }
@@ -1095,7 +1095,7 @@ body {
         </div>
       </div>
 
-      <div class="card" style="border-color:var(--red-mid)">
+      <div class="card" style="border-color:var(--red-mid);margin-bottom:8px">
         <div class="settings-row">
           <div class="settings-row-left"><div class="settings-row-title" style="color:var(--red)">Delete All Trades</div><div class="settings-row-sub">Cannot be undone</div></div>
           <button class="settings-btn danger" onclick="clearAll()">Delete</button>
