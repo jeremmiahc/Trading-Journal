@@ -1218,9 +1218,15 @@ function getSupaKey() { return (settings && settings.supaKey) ? settings.supaKey
 
 async function sbSelect(table, order) {
   var url = getSupaUrl() + '/rest/v1/' + table + '?select=*&order=' + (order||'created_at.desc');
-  var r = await fetch(url, { headers: { 'apikey': getSupaKey(), 'Authorization': 'Bearer ' + getSupaKey() } });
+  var r = await fetch(url, { headers: { 
+    'apikey': getSupaKey(), 
+    'Authorization': 'Bearer ' + getSupaKey(),
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  }});
   if (!r.ok) throw new Error('HTTP ' + r.status);
-  return await r.json();
+  var data = await r.json();
+  return Array.isArray(data) ? data : [];
 }
 async function sbUpsert(table, row, onConflict) {
   var url = getSupaUrl() + '/rest/v1/' + table + '?on_conflict=' + onConflict;
