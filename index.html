@@ -99,7 +99,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding: 20px 16px calc(var(--tab-bar-h) + 32px);
+  padding: 20px 16px calc(var(--tab-bar-h) + 48px);
 }
 .scroll-area::-webkit-scrollbar { width: 0; }
 @media (min-width: 768px) {
@@ -495,25 +495,6 @@ body {
 .tab-bar-wrap.hidden {
   transform: translateY(var(--tab-bar-h));
 }
-.tab-pill {
-  width: 40px;
-  height: 16px;
-  margin: 0 auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-.tab-pill-line {
-  width: 16px; height: 2px;
-  background: var(--text4);
-  border-radius: 2px;
-  transition: transform 0.35s;
-}
 .tab-bar-wrap.hidden .tab-pill-line { transform: rotate(180deg); }
 .tab-bar {
   width: 100%;
@@ -732,9 +713,6 @@ body {
 
 <div class="app">
   <div class="tab-bar-wrap" id="tab-bar-wrap">
-    <div class="tab-pill" id="tab-pill" onclick="toggleTabBar()">
-      <div class="tab-pill-line"></div>
-    </div>
   <div class="tab-bar">
     <div class="tab-item active" id="tab-today" onclick="navTo('today')">
       <div class="tab-icon">
