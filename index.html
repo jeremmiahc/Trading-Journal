@@ -1908,8 +1908,13 @@ async function loadTrades(){
     if(!r.ok) throw new Error('HTTP ' + r.status + ': ' + text.slice(0,200));
     trades = JSON.parse(text);
     if(!Array.isArray(trades)){ toast('Bad response: ' + text.slice(0,80), 'red'); trades=[]; }
-    setConn('ok','Connected · '+trades.length+' trades');
-    renderAll();
+    setConn('ok','Connected · '+trades.length+' trades loaded');
+    // Show count in greeting permanently
+    var gr = document.getElementById('status-greeting'); if(gr) gr.textContent = gr.textContent + ' · ' + trades.length + ' trades';
+    renderToday();
+    renderHistory();
+    renderStatsPage();
+    renderConfluenceCorrelation();
   }catch(e){
     toast('Error: ' + e.message.slice(0,80), 'red');
     setConn('err', e.message);
