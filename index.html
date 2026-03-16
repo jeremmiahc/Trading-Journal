@@ -1217,12 +1217,10 @@ function getSupaUrl() { return (settings && settings.supaUrl) ? settings.supaUrl
 function getSupaKey() { return (settings && settings.supaKey) ? settings.supaKey : SUPA_KEY; }
 
 async function sbSelect(table, order) {
-  var url = getSupaUrl() + '/rest/v1/' + table + '?select=*&order=' + (order||'created_at.desc') + '&limit=1000';
-  var r = await fetch(url, { headers: { 'apikey': getSupaKey(), 'Authorization': 'Bearer ' + getSupaKey(), 'Range': '0-999' } });
+  var url = getSupaUrl() + '/rest/v1/' + table + '?select=*&order=' + (order||'created_at.desc');
+  var r = await fetch(url, { headers: { 'apikey': getSupaKey(), 'Authorization': 'Bearer ' + getSupaKey() } });
   if (!r.ok) throw new Error('HTTP ' + r.status);
-  var data = await r.json();
-  if (!Array.isArray(data)) throw new Error('Unexpected response: ' + JSON.stringify(data).slice(0,100));
-  return data;
+  return await r.json();
 }
 async function sbUpsert(table, row, onConflict) {
   var url = getSupaUrl() + '/rest/v1/' + table + '?on_conflict=' + onConflict;
@@ -1895,14 +1893,8 @@ function toggleTabBar(){var wrap=document.getElementById('tab-bar-wrap');if(!wra
 async function loadTrades(){
   setConn('loading','Fetching trades...');
   try{
-    var raw = await sbSelect('trades','created_at.desc');
-    trades = raw.map(function(t){
-      if(t.confluences && typeof t.confluences === 'string'){try{t.confluences=JSON.parse(t.confluences);}catch(e){t.confluences={};}}
-      if(t.screenshot_urls && typeof t.screenshot_urls === 'string'){try{t.screenshot_urls=JSON.parse(t.screenshot_urls);}catch(e){t.screenshot_urls=[];}}
-      return t;
-    });
+    trades = await sbSelect('trades','created_at.desc');
     setConn('ok','Connected · '+trades.length+' trades');
-    if(trades.length===0) toast('Connected but no trades found — check Supabase RLS settings','red');
     renderAll();
   }catch(e){setConn('err',e.message);trades=[];renderAll();}
 }
