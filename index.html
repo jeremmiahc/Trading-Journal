@@ -1784,7 +1784,7 @@ function editTrade(id){
 function removeExistingSS(btn,url){var e=document.getElementById('ss-existing');if(!e)return;var urls=JSON.parse(e.dataset.urls||'[]');urls=urls.filter(function(u){return u!==url;});e.dataset.urls=JSON.stringify(urls);btn.parentElement.remove();}
 
 var toastTimer;
-function toast(msg,type){var el=document.getElementById('toast');if(!el)return;el.textContent=msg;el.className='toast '+(type||'')+' show';clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},2800);}
+function toast(msg,type){var el=document.getElementById('toast');if(!el)return;el.textContent=msg;el.className='toast '+(type||'')+' show';clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show');},6000);}
 
 function exportCSV(){if(!trades.length){toast('No trades','red');return;}var lines=['id,date,direction,instrument,outcome,r,pnl'];trades.forEach(function(t){lines.push([t.id,t.date,t.direction,t.instrument||'NQ',t.outcome,t.r_result||'',t.pnl_usd||''].join(','));});dlFile('trades_'+todayStr()+'.csv',lines.join('\n'),'text/csv');toast('CSV exported','green');}
 function exportJSON(){if(!trades.length){toast('No trades','red');return;}dlFile('trades_'+todayStr()+'.json',JSON.stringify(trades,null,2),'application/json');toast('JSON exported','green');}
@@ -1899,11 +1899,23 @@ function toggleTabBar(){var wrap=document.getElementById('tab-bar-wrap');if(!wra
 async function loadTrades(){
   setConn('loading','Fetching trades...');
   try{
-    trades = await sbSelect('trades','created_at.desc');
+    var url = getSupaUrl() + '/rest/v1/trades?select=*&order=created_at.desc';
+    var key = getSupaKey();
+    toast('Fetching from: ' + getSupaUrl().slice(8,30), '');
+    var r = await fetch(url, { headers: { 'apikey': key, 'Authorization': 'Bearer ' + key } });
+    var text = await r.text();
+    toast('HTTP ' + r.status + ' · ' + text.slice(0,60), r.ok ? 'green' : 'red');
+    if(!r.ok) throw new Error('HTTP ' + r.status + ': ' + text.slice(0,200));
+    trades = JSON.parse(text);
+    if(!Array.isArray(trades)){ toast('Bad response: ' + text.slice(0,80), 'red'); trades=[]; }
     setConn('ok','Connected · '+trades.length+' trades');
-    toast(trades.length + ' trades loaded', trades.length > 0 ? 'green' : 'red');
     renderAll();
-  }catch(e){setConn('err',e.message);trades=[];renderAll();}
+  }catch(e){
+    toast('Error: ' + e.message.slice(0,80), 'red');
+    setConn('err', e.message);
+    trades=[];
+    renderAll();
+  }
 }
 
 async function init(){
