@@ -111,15 +111,8 @@ body {
 
 /* ── PAGES ── */
 .page { display: none; flex-direction: column; gap: 12px; max-width: 860px; width: 100%; }
-.page.active { display: flex; }
-.page.slide-in-right { animation: slideInRight 0.28s cubic-bezier(0.22,1,0.36,1) both; }
-.page.slide-in-left { animation: slideInLeft 0.28s cubic-bezier(0.22,1,0.36,1) both; }
-.page.slide-out-right { animation: slideOutRight 0.18s cubic-bezier(0.4,0,1,1) both; }
-.page.slide-out-left { animation: slideOutLeft 0.18s cubic-bezier(0.4,0,1,1) both; }
-@keyframes slideInRight { from { opacity:0; transform: translateX(28px); } to { opacity:1; transform:translateX(0); } }
-@keyframes slideInLeft { from { opacity:0; transform: translateX(-28px); } to { opacity:1; transform:translateX(0); } }
-@keyframes slideOutRight { from { opacity:1; transform: translateX(0); } to { opacity:0; transform: translateX(-20px); } }
-@keyframes slideOutLeft { from { opacity:1; transform: translateX(0); } to { opacity:0; transform: translateX(20px); } }
+.page.active { display: flex; animation: pageIn 0.22s cubic-bezier(0.22,1,0.36,1) both; }
+@keyframes pageIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
 /* ── CARDS ── */
 .card {
@@ -769,7 +762,7 @@ body {
     </div>
     <div class="status-right">
       <span class="status-badge" id="session-badge">Loading...</span>
-      <button id="end-session-btn" class="btn-end-session" style="display:none" onclick="startEndSession()">End Session</button>
+<button id="end-session-btn" class="btn-end-session" style="display:none" onclick="startEndSession()">End Session</button>
     </div>
   </div>
 
@@ -815,14 +808,6 @@ body {
               <div class="empty-sub">Tap Log to record your first trade</div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Rule Rings -->
-      <div class="today-full">
-        <div class="card">
-          <div class="card-header"><div class="card-label">Today's Rules</div></div>
-          <div id="today-rule-rings" style="display:flex;gap:0;padding:14px 10px"></div>
         </div>
       </div>
 
@@ -904,29 +889,26 @@ body {
           <div class="form-group" style="margin-bottom:14px">
             <div class="form-label" style="margin-bottom:5px">Confluences <span style="font-weight:400;text-transform:none;font-size:9px;color:var(--text3)">· amber = core required</span></div>
             <div class="btg" id="conf-btg">
-              <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="LVN">LVN ★</button>
               <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="Bookmap Stack">Bookmap ★</button>
               <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="CVD Divergence">CVD ★</button>
-              <button class="btt" onclick="toggleConf(this)" data-v="HTF POI">HTF POI</button>
+              <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="Absorption">Absorption ★</button>
               <button class="btt" onclick="toggleConf(this)" data-v="1H FVG">1H FVG</button>
               <button class="btt" onclick="toggleConf(this)" data-v="15m FVG">15m FVG</button>
               <button class="btt" onclick="toggleConf(this)" data-v="Rej Block">Rej Block</button>
               <button class="btt" onclick="toggleConf(this)" data-v="Liq Sweep">Liq Sweep</button>
               <button class="btt" onclick="toggleConf(this)" data-v="5m FVG">5m FVG</button>
+              <button class="btt" onclick="toggleConf(this)" data-v="VAH">VAH</button>
+              <button class="btt" onclick="toggleConf(this)" data-v="VAL">VAL</button>
             </div>
-            <div class="core-warn" id="core-warn">Rule violation — LVN, Bookmap, or CVD not confirmed.</div>
+            <div class="core-warn" id="core-warn">Rule violation — Bookmap, CVD, or Absorption not confirmed.</div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <div class="form-label">CVD Lead</div>
-              <input class="form-input form-input-sm" type="number" id="f-cvd" min="0" max="10" placeholder="candles">
-            </div>
-            <div class="form-group">
-              <div class="form-label">Absorption</div>
+              <div class="form-label">Absorption Type</div>
               <div class="btg">
-                <button class="btt" data-g="absorption" data-v="Bearish" onclick="pickToggle(this)">Bearish</button>
-                <button class="btt" data-g="absorption" data-v="Bullish" onclick="pickToggle(this)">Bullish</button>
-                <button class="btt" data-g="absorption" data-v="No" onclick="pickToggle(this)">No</button>
+                <button class="btt" data-g="absorption-type" data-v="Bearish" onclick="pickToggle(this)">Bearish</button>
+                <button class="btt" data-g="absorption-type" data-v="Bullish" onclick="pickToggle(this)">Bullish</button>
+                <button class="btt" data-g="absorption-type" data-v="None" onclick="pickToggle(this)">None</button>
               </div>
             </div>
           </div>
@@ -990,35 +972,12 @@ body {
 
         <div class="form-section">
           <div class="form-section-label">Screenshots</div>
-          <div style="display:flex;flex-direction:column;gap:12px">
-            <div>
-              <div class="form-label" style="margin-bottom:6px">Order Flow</div>
-              <div class="ss-drop" id="ss-drop-of" onclick="document.getElementById('f-ss-of').click()">
-                <input type="file" id="f-ss-of" multiple accept="image/*" style="display:none" onchange="handleSS(this,'of')">
-                <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">Footprint / CVD / Delta</div>
-                <div style="font-size:10px;color:var(--text3)">PNG, JPG</div>
-              </div>
-              <div class="ss-previews" id="ss-previews-of"></div>
-            </div>
-            <div>
-              <div class="form-label" style="margin-bottom:6px">Bookmap</div>
-              <div class="ss-drop" id="ss-drop-bm" onclick="document.getElementById('f-ss-bm').click()">
-                <input type="file" id="f-ss-bm" multiple accept="image/*" style="display:none" onchange="handleSS(this,'bm')">
-                <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">Bookmap heatmap</div>
-                <div style="font-size:10px;color:var(--text3)">PNG, JPG</div>
-              </div>
-              <div class="ss-previews" id="ss-previews-bm"></div>
-            </div>
-            <div>
-              <div class="form-label" style="margin-bottom:6px">Other</div>
-              <div class="ss-drop" id="ss-drop" onclick="document.getElementById('f-ss').click()">
-                <input type="file" id="f-ss" multiple accept="image/*" style="display:none" onchange="handleSS(this,'other')">
-                <div style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:2px">Chart, notes, anything else</div>
-                <div style="font-size:10px;color:var(--text3)">PNG, JPG · multiple files supported</div>
-              </div>
-              <div class="ss-previews" id="ss-previews"></div>
-            </div>
+          <div class="ss-drop" id="ss-drop" onclick="document.getElementById('f-ss').click()">
+            <input type="file" id="f-ss" multiple accept="image/*" style="display:none" onchange="handleSS(this)">
+            <div style="font-size:13px;font-weight:500;color:var(--text2);margin-bottom:3px">Tap to upload screenshots</div>
+            <div style="font-size:11px;color:var(--text3)">PNG, JPG · multiple files supported</div>
           </div>
+          <div class="ss-previews" id="ss-previews"></div>
         </div>
 
         <div class="form-actions">
@@ -1108,7 +1067,7 @@ body {
           <div class="settings-row-left"><div class="settings-row-title">Export Trades</div><div class="settings-row-sub" id="export-count">—</div></div>
           <div style="display:flex;gap:6px"><button class="settings-btn" onclick="exportCSV()">CSV</button><button class="settings-btn" onclick="exportJSON()">JSON</button></div>
         </div>
-        <div class="settings-row">
+<div class="settings-row">
           <div class="settings-row-left"><div class="settings-row-title">Win Sounds</div><div class="settings-row-sub">Play audio on winning trades</div></div>
           <button class="toggle-pill" id="toggle-sound" onclick="toggleSound()"></button>
         </div>
@@ -1264,7 +1223,7 @@ async function sbDeleteAll(table) {
   if (!r.ok) throw new Error('HTTP ' + r.status);
 }
 
-var trades = [], settings = {}, ssFiles = [], ssFilesOf = [], ssFilesBm = [], currentPage = 'today', historyFilter = 'all';
+var trades = [], settings = {}, ssFiles = [], currentPage = 'today', historyFilter = 'all';
 var pnlCardTheme = 'dark', pnlDayDates = [], pnlWeekKeys = [], pnlLbType = 'daily', pnlLbDate = '';
 var audioTracks = [], currentAudio = null, fadeOutTimer = null;
 var calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
@@ -1276,11 +1235,11 @@ function toggleConf(btn) {
   checkCoreWarn();
 }
 function checkCoreWarn() {
-  var lvn = document.querySelector('[data-v="LVN"]');
   var bm = document.querySelector('[data-v="Bookmap Stack"]');
   var cvd = document.querySelector('[data-v="CVD Divergence"]');
+  var abs = document.querySelector('[data-v="Absorption"]');
   var warn = document.getElementById('core-warn'); if (!warn) return;
-  warn.style.display = (!(lvn&&lvn.classList.contains('sel-core')) || !(bm&&bm.classList.contains('sel-core')) || !(cvd&&cvd.classList.contains('sel-core'))) ? 'block' : 'none';
+  warn.style.display = (!(bm&&bm.classList.contains('sel-core')) || !(cvd&&cvd.classList.contains('sel-core')) || !(abs&&abs.classList.contains('sel-core'))) ? 'block' : 'none';
 }
 function getSelectedConfs() {
   var result = {};
@@ -1293,22 +1252,15 @@ function getSelectedConfs() {
 }
 
 async function uploadScreenshots() {
-  var allFiles = [
-    {files: ssFilesOf, tag: 'of'},
-    {files: ssFilesBm, tag: 'bm'},
-    {files: ssFiles, tag: 'other'}
-  ];
+  if (!ssFiles.length) return [];
   var urls = [];
-  for (var g = 0; g < allFiles.length; g++) {
-    var group = allFiles[g];
-    for (var i = 0; i < group.files.length; i++) {
-      var file = group.files[i]; if (!file || !file.name) continue;
-      var ext = file.name.split('.').pop() || 'jpg';
-      var path = 'trade-' + group.tag + '-' + Date.now() + '-' + i + '.' + ext;
-      var res = await fetch(getSupaUrl() + '/storage/v1/object/screenshots/' + path, { method: 'POST', headers: { 'apikey': getSupaKey(), 'Authorization': 'Bearer ' + getSupaKey(), 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' }, body: file });
-      if (!res.ok) throw new Error('Screenshot upload failed');
-      urls.push(getSupaUrl() + '/storage/v1/object/public/screenshots/' + path);
-    }
+  for (var i = 0; i < ssFiles.length; i++) {
+    var file = ssFiles[i]; if (!file || !file.name) continue;
+    var ext = file.name.split('.').pop() || 'jpg';
+    var path = 'trade-' + Date.now() + '-' + i + '.' + ext;
+    var res = await fetch(getSupaUrl() + '/storage/v1/object/screenshots/' + path, { method: 'POST', headers: { 'apikey': getSupaKey(), 'Authorization': 'Bearer ' + getSupaKey(), 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' }, body: file });
+    if (!res.ok) throw new Error('Screenshot upload failed');
+    urls.push(getSupaUrl() + '/storage/v1/object/public/screenshots/' + path);
   }
   return urls;
 }
@@ -1324,12 +1276,11 @@ async function saveTrade() {
   if (!why) { toast('Please explain why you took this trade', 'red'); document.getElementById('f-why').focus(); return; }
   var absorption = getToggle('absorption') || '';
   var rules = getToggle('rules');
-  var cvd = document.getElementById('f-cvd').value || '';
   var timePst = document.getElementById('f-time').value || '';
   var notesRaw = document.getElementById('f-notes').value.trim();
   var extras = [];
   if (timePst) extras.push('Time: ' + timePst);
-  if (cvd) extras.push('CVD Lead: ' + cvd + ' candles');
+  var absType = getToggle('absorption-type'); if (absType) extras.push('Absorption: ' + absType);
   if (rules) extras.push('Rules followed: ' + rules);
   var fullNotes = notesRaw + (extras.length ? '\n' + extras.join('\n') : '');
   var sessLabel = getSessionLabel(timePst);
@@ -1346,7 +1297,7 @@ async function saveTrade() {
   btn.textContent = 'Uploading...'; btn.disabled = true;
   try {
     var screenshotUrls = [];
-    if (ssFiles.length || ssFilesOf.length || ssFilesBm.length) { btn.textContent = 'Uploading...'; screenshotUrls = await uploadScreenshots(); }
+    if (ssFiles.length) { btn.textContent = 'Uploading...'; screenshotUrls = await uploadScreenshots(); }
     var existingEl = document.getElementById('ss-existing');
     var existingUrls = existingEl ? JSON.parse(existingEl.dataset.urls||'[]') : [];
     trade.screenshot_urls = existingUrls.concat(screenshotUrls);
@@ -1383,23 +1334,21 @@ function getToggle(g) {
   return found;
 }
 
-function handleSS(input, type) {
-  var arr = type==='of' ? ssFilesOf : type==='bm' ? ssFilesBm : ssFiles;
-  var previewId = type==='of' ? 'ss-previews-of' : type==='bm' ? 'ss-previews-bm' : 'ss-previews';
+function handleSS(input) {
   Array.from(input.files).forEach(function(file) {
-    var idx = arr.length; arr.push(file);
+    var idx = ssFiles.length; ssFiles.push(file);
     var reader = new FileReader();
-    reader.onload = function(e) { addThumb(e.target.result, idx, arr, previewId); };
+    reader.onload = function(e) { addThumb(e.target.result, idx); };
     reader.readAsDataURL(file);
   });
   input.value = '';
 }
-function addThumb(src, idx, arr, previewId) {
-  var container = document.getElementById(previewId || 'ss-previews'); if (!container) return;
+function addThumb(src, idx) {
+  var container = document.getElementById('ss-previews'); if (!container) return;
   var wrap = document.createElement('div'); wrap.className = 'ss-thumb'; wrap.setAttribute('data-idx', idx);
   var img = document.createElement('img'); img.src = src;
   var rm = document.createElement('div'); rm.className = 'ss-remove'; rm.textContent = '×';
-  rm.onclick = function() { arr[idx] = null; wrap.remove(); };
+  rm.onclick = function() { ssFiles[idx] = null; wrap.remove(); };
   wrap.appendChild(img); wrap.appendChild(rm); container.appendChild(wrap);
 }
 
@@ -1423,34 +1372,10 @@ function sessTimes() {
   return { prime: toMin(settings.primeSt||'06:45'), good: toMin(settings.goodSt||'07:45'), end: toMin(settings.endSt||'10:30') };
 }
 
-var tabOrder = ['today','history','log','stats','more'];
 function navTo(page) {
-  var prevPage = currentPage;
-  var prevIdx = tabOrder.indexOf(prevPage);
-  var nextIdx = tabOrder.indexOf(page);
-  var goingRight = nextIdx > prevIdx;
-
-  // animate out the old page
-  var oldPg = document.getElementById('page-' + prevPage);
-  if (oldPg && prevPage !== page) {
-    oldPg.classList.remove('active','slide-in-right','slide-in-left');
-    oldPg.classList.add(goingRight ? 'slide-out-left' : 'slide-out-right');
-    setTimeout(function() {
-      oldPg.classList.remove('slide-out-left','slide-out-right');
-      oldPg.style.display = 'none';
-    }, 180);
-  }
-
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.tab-item').forEach(function(t) { t.classList.remove('active'); });
-  var pg = document.getElementById('page-' + page);
-  if (pg) {
-    pg.style.display = 'flex';
-    pg.classList.remove('slide-in-right','slide-in-left','slide-out-right','slide-out-left');
-    if (prevPage !== page) {
-      pg.classList.add(goingRight ? 'slide-in-right' : 'slide-in-left');
-    }
-    pg.classList.add('active');
-  }
+  var pg = document.getElementById('page-' + page); if (pg) pg.classList.add('active');
   var tab = document.getElementById('tab-' + page); if (tab) tab.classList.add('active');
   currentPage = page;
   var scrollArea = document.getElementById('scroll-area'); if (scrollArea) scrollArea.scrollTop = 0;
@@ -1505,18 +1430,17 @@ function renderToday() {
   var esBtn = document.getElementById('end-session-btn'); if(esBtn) esBtn.style.display=tt.length?'block':'none';
   var qaBtn = document.getElementById('qa-end-session'); if(qaBtn){qaBtn.style.opacity=tt.length?'1':'0.45';qaBtn.style.pointerEvents=tt.length?'auto':'none';}
   var list = document.getElementById('today-trade-list'); if (!list) return;
-  list.innerHTML = tt.length ? tt.map(function(t){return buildTradeRow(t);}).join('') + buildMicroCurve(tt) : '<div class="empty"><div class="empty-title">No trades today</div><div class="empty-sub">Tap Log to record your first trade</div></div>';
+  list.innerHTML = tt.length ? tt.map(function(t){return buildTradeRow(t);}).join('') : '<div class="empty"><div class="empty-title">No trades today</div><div class="empty-sub">Tap Log to record your first trade</div></div>';
   renderEquity();
-  renderRuleRings(tt);
 }
 
 function buildTradeRow(t) {
   var c = t.confluences || {};
-  var coreKeys = ['LVN','Bookmap Stack','CVD Divergence'];
+  var coreKeys = ['Bookmap Stack','CVD Divergence','Absorption'];
   var hasViolation = coreKeys.some(function(k) { return c[k] === false; });
   var pills = Object.keys(c).map(function(k) {
     var isCore = coreKeys.includes(k);
-    var label = k==='Bookmap Stack'?'Bookmap':k==='CVD Divergence'?'CVD':k;
+    var label = k==='Bookmap Stack'?'Bookmap':k==='CVD Divergence'?'CVD':k==='Absorption'?'Absorption':k;
     if (isCore && c[k]) return '<span class="tr-pill core">'+label+'</span>';
     if (isCore && !c[k]) return '<span class="tr-pill core-off">'+label+'</span>';
     if (c[k]) return '<span class="tr-pill opt">'+label+'</span>';
@@ -1559,7 +1483,7 @@ function renderHistory() {
     if (historyFilter === 'loss') return t.outcome === 'Loss';
     if (historyFilter === 'prime') return t.session === 'Prime';
     if (historyFilter === 'good') return t.session === 'Good';
-    if (historyFilter === 'violation') { var c=t.confluences||{}; return ['LVN','Bookmap Stack','CVD Divergence'].some(function(k){return c[k]===false;}); }
+    if (historyFilter === 'violation') { var c=t.confluences||{}; return ['Bookmap Stack','CVD Divergence','Absorption'].some(function(k){return c[k]===false;}); }
     return true;
   });
   if (!filtered.length) { list.innerHTML='<div class="empty"><div class="empty-title">No trades found</div><div class="empty-sub">Try a different filter</div></div>'; return; }
@@ -1600,79 +1524,6 @@ function renderStatsPage() {
   var days=Object.keys(dayMap).map(function(d){return{date:d,pnl:dayMap[d].pnl,wins:dayMap[d].wins,losses:dayMap[d].losses};}).sort(function(a,b){return b.pnl-a.pnl;});
   var sd=document.getElementById('stats-days');
   if(sd)sd.innerHTML=days.length?days.slice(0,3).concat(days.slice(-2).reverse()).map(function(d){var c=d.pnl>=0?'var(--green)':'var(--red)';var p=(d.pnl>=0?'+$':'-$')+Math.abs(d.pnl).toLocaleString();return'<div class="bkd-row"><div class="bkd-label">'+fDate(d.date)+'</div><div style="font-size:10px;color:var(--text3)">'+d.wins+'W '+d.losses+'L</div><div class="bkd-val" style="color:'+c+'">'+p+'</div></div>';}).join(''):'<div style="font-size:12px;color:var(--text3)">No data</div>';
-}
-
-function buildMicroCurve(tt) {
-  var rTrades = tt.filter(function(t){return t.r_result!=null;});
-  if (!rTrades.length) return '';
-  var running = 0;
-  var cumR = [0];
-  rTrades.forEach(function(t){ running += t.r_result; cumR.push(Math.round(running*100)/100); });
-  var maxR = Math.max.apply(null, cumR);
-  var minR = Math.min.apply(null, cumR);
-  var range = (maxR - minR) || 1;
-  var totalR = cumR[cumR.length-1];
-  var isPos = totalR >= 0;
-  var lineCol = isPos ? '#166534' : '#991b1b';
-  var n = cumR.length;
-  var W = 300; var H = 36;
-  var pad = {t:4,r:4,b:4,l:4};
-  var cW = W-pad.l-pad.r; var cH = H-pad.t-pad.b;
-  function sx(i){return pad.l+(i/(n-1))*cW;}
-  function sy(v){return pad.t+cH-((v-minR)/range)*cH;}
-  var pathD = 'M'+sx(0)+','+sy(cumR[0]);
-  for(var i=1;i<n;i++) pathD += ' L'+sx(i)+','+sy(cumR[i]);
-  var areaD = pathD + ' L'+sx(n-1)+','+(pad.t+cH)+' L'+sx(0)+','+(pad.t+cH)+' Z';
-  var fillId = 'mc-fill-'+Date.now();
-  var dotsHtml = '';
-  rTrades.forEach(function(t,i){
-    var col = t.r_result>0?'#166534':t.r_result<0?'#991b1b':'#a8a298';
-    dotsHtml += '<circle cx="'+sx(i+1)+'" cy="'+sy(cumR[i+1])+'" r="2.5" fill="'+col+'" stroke="white" stroke-width="1"/>';
-  });
-  var rStr = (totalR>=0?'+':'')+totalR.toFixed(1)+'R';
-  return '<div style="padding:8px 14px 10px;border-top:1px solid var(--border)">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">'
-    + '<div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text4)">R curve today</div>'
-    + '<div style="font-size:11px;font-weight:500;color:'+lineCol+'">'+rStr+'</div>'
-    + '</div>'
-    + '<svg width="100%" height="'+H+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">'
-    + '<defs><linearGradient id="'+fillId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+lineCol+'" stop-opacity="0.12"/><stop offset="100%" stop-color="'+lineCol+'" stop-opacity="0"/></linearGradient></defs>'
-    + '<path d="'+areaD+'" fill="url(#'+fillId+')" vector-effect="non-scaling-stroke"/>'
-    + '<path d="'+pathD+'" fill="none" stroke="'+lineCol+'" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
-    + dotsHtml
-    + '</svg>'
-    + '</div>';
-}
-
-function renderRuleRings(tt) {
-  var el = document.getElementById('today-rule-rings'); if(!el) return;
-  var losses = tt.filter(function(t){return t.outcome==='Loss';}).length;
-  var allCore = tt.length>0 && tt.every(function(t){var c=t.confluences||{};return c['LVN']&&c['Bookmap Stack']&&c['CVD Divergence'];});
-  var withinSession = !tt.some(function(t){var m=t.notes&&t.notes.match(/Time: (\d+):(\d+)/);return m&&(parseInt(m[1])*60+parseInt(m[2]))>=570;});
-  var rules = [
-    { label: 'Max 2\ntrades', pass: tt.length<=2, note: tt.length+'/2' },
-    { label: 'Core\nconfs', pass: tt.length===0||allCore, note: tt.length?'all ✓':'no trades' },
-    { label: 'Loss\nlimit', pass: losses<2, note: losses+' loss'+(losses!==1?'es':'') },
-    { label: 'Session\nwindow', pass: withinSession, note: 'by 9:30' },
-  ];
-  el.innerHTML = rules.map(function(r) {
-    var passCol = '#166534'; var failCol = '#991b1b';
-    var col = r.pass ? passCol : failCol;
-    var strokeCol = r.pass ? '#bbf7d0' : '#fecaca';
-    var bgCol = r.pass ? '#f0faf4' : '#fef2f2';
-    var dashArr = 107; var dashOff = r.pass ? 0 : (r.label.indexOf('Loss')>=0 ? Math.round((1-(tt.length===0?1:Math.max(0,1-losses/2)))*dashArr) : 27);
-    var icon = r.pass ? '✓' : '✗';
-    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px">'
-      + '<svg width="44" height="44" viewBox="0 0 44 44">'
-      + '<circle cx="22" cy="22" r="17" fill="'+bgCol+'" stroke="'+strokeCol+'" stroke-width="1"/>'
-      + '<circle cx="22" cy="22" r="15" fill="none" stroke="'+strokeCol+'" stroke-width="3" opacity="0.3"/>'
-      + '<circle cx="22" cy="22" r="15" fill="none" stroke="'+col+'" stroke-width="3" stroke-dasharray="'+dashArr+'" stroke-dashoffset="'+dashOff+'" stroke-linecap="round" transform="rotate(-90 22 22)"/>'
-      + '<text x="22" y="27" text-anchor="middle" font-size="13" font-weight="500" fill="'+col+'" font-family="DM Sans,sans-serif">'+icon+'</text>'
-      + '</svg>'
-      + '<div style="font-size:9px;font-weight:600;color:var(--text3);text-align:center;text-transform:uppercase;letter-spacing:0.5px;white-space:pre-line;line-height:1.3">'+r.label+'</div>'
-      + '<div style="font-size:9px;color:'+col+';font-weight:500">'+r.note+'</div>'
-      + '</div>';
-  }).join('');
 }
 
 function renderAll() {
@@ -1721,7 +1572,7 @@ function openModal(id) {
   var t=trades.find(function(x){return x.id===id;}); if(!t)return;
   var mt=document.getElementById('modal-title');
   if(mt)mt.innerHTML='<span class="dir-badge dir-'+(t.direction==='Long'?'long':'short')+'">'+t.direction+'</span>'+(t.instrument?' <span class="inst-badge">'+t.instrument+'</span>':'')+' <span style="font-size:13px;color:var(--text2);font-weight:400">'+fDate(t.date)+'</span>';
-  var c=t.confluences||{}; var coreKeys=['LVN','Bookmap Stack','CVD Divergence'];
+  var c=t.confluences||{}; var coreKeys=['Bookmap Stack','CVD Divergence','Absorption'];
   var coreOn=[],coreOff=[],optional=[];
   Object.keys(c).forEach(function(k){if(coreKeys.includes(k)){if(c[k])coreOn.push(k);else coreOff.push(k);}else if(c[k])optional.push(k);});
   var confRows=coreOff.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--red)"></div><div class="mc-conf-name" style="color:var(--text3);text-decoration:line-through">'+k+'</div><span class="mc-conf-tag" style="background:var(--red-bg);color:var(--red)">missing</span></div>';}).join('')+coreOn.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--amber)"></div><div class="mc-conf-name" style="font-weight:500">'+k+'</div><span class="mc-conf-tag" style="background:var(--amber-bg);color:var(--amber)">core</span></div>';}).join('')+optional.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--green)"></div><div class="mc-conf-name" style="color:var(--text2)">'+k+'</div></div>';}).join('');
@@ -1770,13 +1621,12 @@ function clearForm(){
   var btn=document.getElementById('save-btn');if(btn){btn.textContent='Save Trade';btn.dataset.editId='';}
   var cb=document.getElementById('cancel-edit-btn');if(cb)cb.style.display='none';
   var existing=document.getElementById('ss-existing');if(existing)existing.remove();
-  ['f-date','f-time','f-cvd','f-notes','f-mistakes','f-why','f-pnl','f-r','f-stop','f-risk'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=id==='f-date'?todayStr():'';});
+  ['f-date','f-time','f-notes','f-mistakes','f-why','f-pnl','f-r','f-stop','f-risk'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=id==='f-date'?todayStr():'';});
   document.querySelectorAll('.btt').forEach(function(b){b.className='btt';});
   document.querySelectorAll('[data-core="1"]').forEach(function(b){b.className='btt sel-core';});
   var nq=document.querySelector('[data-g="instrument"][data-v="NQ"]');if(nq)nq.className='btt sel-core';
   var warn=document.getElementById('core-warn');if(warn)warn.style.display='none';
-  ssFiles=[];ssFilesOf=[];ssFilesBm=[];
-  ['ss-previews','ss-previews-of','ss-previews-bm'].forEach(function(id){var sp=document.getElementById(id);if(sp)sp.innerHTML='';});
+  ssFiles=[];var sp=document.getElementById('ss-previews');if(sp)sp.innerHTML='';
 }
 
 function openLightbox(src){var ov=document.getElementById('ss-overlay');var img=document.getElementById('ss-overlay-img');if(!ov||!img)return;img.src=src;ov.style.display='flex';document.body.style.overflow='hidden';}
@@ -1790,15 +1640,15 @@ function editTrade(id){
   closeModal();navTo('log');
   setTimeout(function(){
     var fd=document.getElementById('f-date');if(fd)fd.value=t.date||'';
-    var notes=t.notes||'';var timeMatch=notes.match(/Time: (\S+)/);var cvdMatch=notes.match(/CVD Lead: (\d+)/);
+    var notes=t.notes||'';var timeMatch=notes.match(/Time: (\S+)/);
     var ft=document.getElementById('f-time');if(ft&&timeMatch)ft.value=timeMatch[1];
-    var fc=document.getElementById('f-cvd');if(fc&&cvdMatch)fc.value=cvdMatch[1];
-    document.getElementById('f-notes').value=notes.replace(/\nTime:[^\n]*|\nCVD Lead:[^\n]*|\nRules followed:[^\n]*/g,'').trim();
+    document.getElementById('f-notes').value=notes.replace(/\nTime:[^\n]*|\nRules followed:[^\n]*/g,'').trim();
     document.getElementById('f-mistakes').value=t.mistakes||'';document.getElementById('f-why').value=t.why_taken||'';
     document.getElementById('f-pnl').value=t.pnl_usd||'';document.getElementById('f-r').value=t.r_result||'';
     document.getElementById('f-stop').value=t.stop_pts||'';document.getElementById('f-risk').value=t.risk_usd||'';
     function st2(g,v){if(!v)return;var b=document.querySelector('.btt[data-g="'+g+'"][data-v="'+v+'"]');if(b){document.querySelectorAll('.btt[data-g="'+g+'"]').forEach(function(x){x.className='btt';});b.className='btt sel-default';}}
-    st2('direction',t.direction);st2('outcome',t.outcome);st2('emotion',t.emotion);st2('absorption',t.absorption||'');st2('instrument',t.instrument||'NQ');
+    st2('direction',t.direction);st2('outcome',t.outcome);st2('emotion',t.emotion);st2('instrument',t.instrument||'NQ');
+    var absMatch=(t.notes||'').match(/Absorption: (\w+)/);if(absMatch)st2('absorption-type',absMatch[1]);
     if(t.confluences){document.querySelectorAll('#conf-btg button').forEach(function(btn){var v=btn.getAttribute('data-v');var isCore=btn.getAttribute('data-core')==='1';if(v&&t.confluences.hasOwnProperty(v)){btn.className=t.confluences[v]?(isCore?'btt sel-core':'btt sel-default'):'btt';}else if(isCore){btn.className='btt';}});checkCoreWarn();}
     var saveBtn=document.getElementById('save-btn');if(saveBtn){saveBtn.textContent='Update Trade';saveBtn.dataset.editId=id;}
     var cancelBtn=document.getElementById('cancel-edit-btn');if(cancelBtn)cancelBtn.style.display='inline-flex';
@@ -1817,27 +1667,7 @@ function dlFile(filename,data,type){var a=document.createElement('a');a.href=URL
 async function clearAll(){if(!confirm('Delete ALL trades permanently?'))return;if(!confirm('Are you absolutely sure?'))return;try{await sbDeleteAll('trades');trades=[];renderAll();toast('All trades cleared');}catch(e){toast('Error: '+e.message,'red');}}
 async function deleteTrade(id){if(!confirm('Delete this trade?'))return;try{await sbDelete('trades',id);trades=trades.filter(function(t){return t.id!==id;});closeModal();renderAll();toast('Trade deleted');}catch(e){toast('Delete failed: '+e.message,'red');}}
 
-function setupDrop(){
-  var slots=[
-    {id:'ss-drop-of',arr:ssFilesOf,previewId:'ss-previews-of'},
-    {id:'ss-drop-bm',arr:ssFilesBm,previewId:'ss-previews-bm'},
-    {id:'ss-drop',arr:ssFiles,previewId:'ss-previews'}
-  ];
-  slots.forEach(function(slot){
-    var drop=document.getElementById(slot.id);if(!drop||drop._ready)return;drop._ready=true;
-    drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('dragover');});
-    drop.addEventListener('dragleave',function(){drop.classList.remove('dragover');});
-    drop.addEventListener('drop',function(e){
-      e.preventDefault();drop.classList.remove('dragover');
-      Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('image/');}).forEach(function(file){
-        var idx=slot.arr.length;slot.arr.push(file);
-        var reader=new FileReader();
-        reader.onload=function(ev){addThumb(ev.target.result,idx,slot.arr,slot.previewId);};
-        reader.readAsDataURL(file);
-      });
-    });
-  });
-}
+function setupDrop(){var drop=document.getElementById('ss-drop');if(!drop||drop._ready)return;drop._ready=true;drop.addEventListener('dragover',function(e){e.preventDefault();drop.classList.add('dragover');});drop.addEventListener('dragleave',function(){drop.classList.remove('dragover');});drop.addEventListener('drop',function(e){e.preventDefault();drop.classList.remove('dragover');Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('image/');}).forEach(function(file){var idx=ssFiles.length;ssFiles.push(file);var reader=new FileReader();reader.onload=function(ev){addThumb(ev.target.result,idx);};reader.readAsDataURL(file);});});}
 
 // END SESSION
 function switchEsTab(tab){
@@ -1860,13 +1690,13 @@ function startEndSession(){
   switchEsTab('daily');document.getElementById('end-session-modal').style.display='flex';
 }
 function generateDebriefQuestions(ts){
-  var qs=[];var wins=ts.filter(function(t){return t.outcome==='Win';});var losses=ts.filter(function(t){return t.outcome==='Loss';});var totalPnl=ts.reduce(function(a,t){return a+(t.pnl_usd||0);},0);var badEmotions=ts.filter(function(t){return t.emotion==='FOMO'||t.emotion==='Revenge'||t.emotion==='Anxious';});var ruleBreaks=ts.filter(function(t){var c=t.confluences||{};return !c['LVN']||!c['Bookmap Stack'];});var overtraded=ts.length>2;var twoLosses=losses.length>=2;var slowTrades=ts.filter(function(t){return t.session==='Slow';});
+  var qs=[];var wins=ts.filter(function(t){return t.outcome==='Win';});var losses=ts.filter(function(t){return t.outcome==='Loss';});var totalPnl=ts.reduce(function(a,t){return a+(t.pnl_usd||0);},0);var badEmotions=ts.filter(function(t){return t.emotion==='FOMO'||t.emotion==='Revenge'||t.emotion==='Anxious';});var ruleBreaks=ts.filter(function(t){var c=t.confluences||{};return !c['Bookmap Stack']||!c['CVD Divergence']||!c['Absorption'];});var overtraded=ts.length>2;var twoLosses=losses.length>=2;var slowTrades=ts.filter(function(t){return t.session==='Slow';});
   if(wins.length===ts.length){qs.push('You went '+wins.length+'/'+ts.length+' today. What clicked? Was it patience, setup quality, or execution?');}
   else if(losses.length===ts.length){qs.push('Tough session — all losses. Looking back, was the issue the setups themselves or how you executed them?');}
   else{var pnlStr=(totalPnl>=0?'+$':'-$')+Math.abs(totalPnl||0).toLocaleString();qs.push('You ended '+wins.length+'W / '+losses.length+'L ('+pnlStr+'). How do you feel about the quality of your decisions today?');}
   if(overtraded)qs.push('You took '+ts.length+' trades — over your 2-trade limit. What was going through your mind when you took that extra trade?');
   if(twoLosses&&ts.length>losses.length)qs.push('You hit 2 losses but kept trading. What made you override the stop rule?');
-  if(ruleBreaks.length){var rb=ruleBreaks[0];var c=rb.confluences||{};var missing=!c['LVN']?'no LVN confirmed':'no Bookmap confirmed';qs.push('Your '+(rb.outcome||'')+' trade on '+fDate(rb.date)+' had '+missing+'. Did you know at the time or only see it in review?');}
+  if(ruleBreaks.length){var rb=ruleBreaks[0];var c=rb.confluences||{};var missing=!c['Bookmap Stack']?'no Bookmap confirmed':!c['CVD Divergence']?'no CVD confirmed':'no Absorption candle';qs.push('Your '+(rb.outcome||'')+' trade on '+fDate(rb.date)+' had '+missing+'. Did you know at the time or only see it in review?');}
   if(badEmotions.length){qs.push('You tagged "'+badEmotions[0].emotion+'" on at least one trade. What triggered that state?');}
   if(slowTrades.length)qs.push('You traded in the Slow window (after 9am). Was the setup strong enough to justify it?');
   return qs.slice(0,5);
@@ -1917,7 +1747,7 @@ function buildDailyHtml(dateStr){
   var dl=new Date(dateStr+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',year:'numeric'});
   var shots=[];dt.forEach(function(t){var s=t.screenshot_urls||t.screenshots||[];if(typeof s==='string'){try{s=JSON.parse(s);}catch(e){s=[];}}s.forEach(function(u){if(u)shots.push({url:u,outcome:t.outcome,r:t.r_result});});});
   var ssHtml=shots.map(function(s){var bc=s.outcome==='Win'?'w':'l';var rc=s.r!=null?(s.r>0?'pos':'neg'):'';var rs=s.r!=null?(s.r>0?'+':'')+s.r+'R':'';return'<div class="pc-shot"><img src="'+s.url+'" loading="lazy"><div class="pc-shot-badge '+bc+'">'+s.outcome.toUpperCase()+'</div>'+(rs?'<div class="pc-shot-r '+rc+'">'+rs+'</div>':'')+'</div>';}).join('');
-  var coreKeys=['LVN','Bookmap Stack','CVD Divergence'];
+  var coreKeys=['Bookmap Stack','CVD Divergence','Absorption'];
   var tradeRows=dt.map(function(t){var dir=t.direction==='Long'?'l':'s';var rVal=t.r_result!=null?(t.r_result>0?'+':'')+t.r_result+'R':'—';var rCls=t.r_result>0?'pos':t.r_result<0?'neg':'';var c=t.confluences||{};var confPills=Object.keys(c).filter(function(k){return c[k];}).slice(0,5).map(function(k){var isCore=coreKeys.includes(k);var label=k==='Bookmap Stack'?'Bookmap':k;return'<span class="pc-t-conf'+(isCore?' core':'')+'">'+label+'</span>';}).join('');var sessStr=t.session||'';return'<div class="pc-trade-row"><span class="pc-t-dir '+dir+'">'+t.direction.toUpperCase()+'</span><span class="pc-t-inst">'+(t.instrument||'NQ')+'</span><span class="pc-t-time">'+sessStr+'</span><div class="pc-t-confs">'+confPills+'</div><span class="pc-t-r '+rCls+'">'+rVal+'</span></div>';}).join('');
   var noteText=dt[0]&&dt[0].why_taken?dt[0].why_taken.slice(0,140)+(dt[0].why_taken.length>140?'...':''):'';
   var emotions=[...new Set(dt.map(function(t){return t.emotion;}).filter(Boolean))];var sessSet=[...new Set(dt.map(function(t){return t.session;}).filter(Boolean))];
