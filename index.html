@@ -34,7 +34,6 @@
   --serif: 'DM Serif Display', Georgia, serif;
   --nav-h: 68px;
   --tab-bar-h: 68px;
-  --tab-bar-h: 68px;
 }
 
 html { height: 100%; }
@@ -677,6 +676,11 @@ body {
         </div>
       </div>
 
+      <!-- R Curve Card — separate from trade list -->
+      <div class="today-full">
+        <div class="card" id="today-micro-curve" style="overflow:hidden;display:none"></div>
+      </div>
+
       <!-- Rule Rings -->
       <div class="today-full">
         <div class="card">
@@ -771,8 +775,9 @@ body {
               <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="CVD Divergence">CVD ★</button>
               <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="HTF POI">HTF POI ★</button>
               <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="Absorption">Absorption ★</button>
+              <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="High Volume Node">HVN ★</button>
             </div>
-            <div class="core-warn" id="core-warn">Missing core confluence — Bookmap, CVD, HTF POI, or Absorption not confirmed.</div>
+            <div class="core-warn" id="core-warn">Missing core confluence — Bookmap, CVD, HTF POI, Absorption, or HVN not confirmed.</div>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -1100,7 +1105,8 @@ function checkCoreWarn() {
   var htf = document.querySelector('[data-v="HTF POI"]');
   var abs = document.querySelector('[data-v="Absorption"]');
   var warn = document.getElementById('core-warn'); if (!warn) return;
-  var allCore = (bm&&bm.classList.contains('sel-core')) && (cvd&&cvd.classList.contains('sel-core')) && (htf&&htf.classList.contains('sel-core')) && (abs&&abs.classList.contains('sel-core'));
+  var hvn = document.querySelector('[data-v="High Volume Node"]');
+  var allCore = (bm&&bm.classList.contains('sel-core')) && (cvd&&cvd.classList.contains('sel-core')) && (htf&&htf.classList.contains('sel-core')) && (abs&&abs.classList.contains('sel-core')) && (hvn&&hvn.classList.contains('sel-core'));
   warn.style.display = allCore ? 'none' : 'block';
   var setupBtg = document.getElementById('setup-btg');
   var hint = document.getElementById('setup-lock-hint');
@@ -1253,7 +1259,6 @@ function navTo(page) {
   var nextIdx = tabOrder.indexOf(page);
   var goingRight = nextIdx > prevIdx;
 
-  // animate out the old page
   var oldPg = document.getElementById('page-' + prevPage);
   if (oldPg && prevPage !== page) {
     oldPg.classList.remove('active','slide-in-right','slide-in-left');
@@ -1326,15 +1331,28 @@ function renderToday() {
   var cEl = document.getElementById('today-count'); if(cEl){cEl.textContent=tt.length+' / 2';cEl.className='stat-item-v'+(tt.length>=2?' neg':'');}
   var esBtn = document.getElementById('end-session-btn'); if(esBtn) esBtn.style.display=tt.length?'block':'none';
   var qaBtn = document.getElementById('qa-end-session'); if(qaBtn){qaBtn.style.opacity=tt.length?'1':'0.45';qaBtn.style.pointerEvents=tt.length?'auto':'none';}
+
+  // Trade list — no curve inside
   var list = document.getElementById('today-trade-list'); if (!list) return;
-  list.innerHTML = tt.length ? tt.map(function(t){return buildTradeRow(t);}).join('') + buildMicroCurve(tt) : '<div class="empty"><div class="empty-title">No trades today</div><div class="empty-sub">Tap Log to record your first trade</div></div>';
+  list.innerHTML = tt.length
+    ? tt.map(function(t){return buildTradeRow(t);}).join('')
+    : '<div class="empty"><div class="empty-title">No trades today</div><div class="empty-sub">Tap Log to record your first trade</div></div>';
+
+  // R Curve in its own card
+  var curveCard = document.getElementById('today-micro-curve');
+  if (curveCard) {
+    var curveHtml = tt.length ? buildMicroCurve(tt) : '';
+    curveCard.innerHTML = curveHtml;
+    curveCard.style.display = curveHtml ? 'block' : 'none';
+  }
+
   renderEquity();
   renderRuleRings(tt);
 }
 
 function buildTradeRow(t) {
   var c = t.confluences || {};
-  var coreKeys = ['Bookmap Stack','CVD Divergence','HTF POI','Absorption'];
+  var coreKeys = ['Bookmap Stack','CVD Divergence','HTF POI','Absorption','High Volume Node'];
   var hasViolation = coreKeys.some(function(k) { return c[k] === false; });
   var pills = Object.keys(c).map(function(k) {
     var isCore = coreKeys.includes(k);
@@ -1441,8 +1459,8 @@ function buildMicroCurve(tt) {
   var isPos = totalR >= 0;
   var lineCol = isPos ? '#166534' : '#991b1b';
   var n = cumR.length;
-  var W = 300; var H = 36;
-  var pad = {t:4,r:4,b:4,l:4};
+  var W = 300; var H = 48;
+  var pad = {t:6,r:6,b:6,l:6};
   var cW = W-pad.l-pad.r; var cH = H-pad.t-pad.b;
   function sx(i){return pad.l+(i/(n-1))*cW;}
   function sy(v){return pad.t+cH-((v-minR)/range)*cH;}
@@ -1456,13 +1474,13 @@ function buildMicroCurve(tt) {
     dotsHtml += '<circle cx="'+sx(i+1)+'" cy="'+sy(cumR[i+1])+'" r="2.5" fill="'+col+'" stroke="white" stroke-width="1"/>';
   });
   var rStr = (totalR>=0?'+':'')+totalR.toFixed(1)+'R';
-  return '<div style="padding:8px 14px 10px;border-top:1px solid var(--border)">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">'
-    + '<div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text4)">R curve today</div>'
-    + '<div style="font-size:11px;font-weight:500;color:'+lineCol+'">'+rStr+'</div>'
+  return '<div style="padding:10px 16px 12px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    + '<div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text4)">R Curve Today</div>'
+    + '<div style="font-size:12px;font-weight:500;color:'+lineCol+'">'+rStr+'</div>'
     + '</div>'
     + '<svg width="100%" height="'+H+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">'
-    + '<defs><linearGradient id="'+fillId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+lineCol+'" stop-opacity="0.12"/><stop offset="100%" stop-color="'+lineCol+'" stop-opacity="0"/></linearGradient></defs>'
+    + '<defs><linearGradient id="'+fillId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+lineCol+'" stop-opacity="0.14"/><stop offset="100%" stop-color="'+lineCol+'" stop-opacity="0"/></linearGradient></defs>'
     + '<path d="'+areaD+'" fill="url(#'+fillId+')" vector-effect="non-scaling-stroke"/>'
     + '<path d="'+pathD+'" fill="none" stroke="'+lineCol+'" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
     + dotsHtml
@@ -1473,7 +1491,7 @@ function buildMicroCurve(tt) {
 function renderRuleRings(tt) {
   var el = document.getElementById('today-rule-rings'); if(!el) return;
   var losses = tt.filter(function(t){return t.outcome==='Loss';}).length;
-  var allCore = tt.length>0 && tt.every(function(t){var c=t.confluences||{};return c['Bookmap Stack']&&c['CVD Divergence']&&c['HTF POI']&&c['Absorption'];});
+  var allCore = tt.length>0 && tt.every(function(t){var c=t.confluences||{};return c['Bookmap Stack']&&c['CVD Divergence']&&c['HTF POI']&&c['Absorption']&&c['High Volume Node'];});
   var withinSession = !tt.some(function(t){var m=t.notes&&t.notes.match(/Time: (\d+):(\d+)/);return m&&(parseInt(m[1])*60+parseInt(m[2]))>=570;});
   var rules = [
     { label: 'Max 2\ntrades', pass: tt.length<=2, note: tt.length+'/2' },
@@ -1547,7 +1565,7 @@ function openModal(id) {
   var t=trades.find(function(x){return x.id===id;}); if(!t)return;
   var mt=document.getElementById('modal-title');
   if(mt)mt.innerHTML='<span class="dir-badge dir-'+(t.direction==='Long'?'long':'short')+'">'+t.direction+'</span>'+(t.instrument?' <span class="inst-badge">'+t.instrument+'</span>':'')+' <span style="font-size:13px;color:var(--text2);font-weight:400">'+fDate(t.date)+'</span>';
-  var c=t.confluences||{}; var coreKeys=['Bookmap Stack','CVD Divergence','HTF POI','Absorption'];
+  var c=t.confluences||{}; var coreKeys=['Bookmap Stack','CVD Divergence','HTF POI','Absorption','High Volume Node'];
   var coreOn=[],coreOff=[],optional=[];
   Object.keys(c).forEach(function(k){if(coreKeys.includes(k)){if(c[k])coreOn.push(k);else coreOff.push(k);}else if(c[k])optional.push(k);});
   var confRows=coreOff.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--red)"></div><div class="mc-conf-name" style="color:var(--text3);text-decoration:line-through">'+k+'</div><span class="mc-conf-tag" style="background:var(--red-bg);color:var(--red)">missing</span></div>';}).join('')+coreOn.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--amber)"></div><div class="mc-conf-name" style="font-weight:500">'+k+'</div><span class="mc-conf-tag" style="background:var(--amber-bg);color:var(--amber)">core</span></div>';}).join('')+optional.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--green)"></div><div class="mc-conf-name" style="color:var(--text2)">'+k+'</div></div>';}).join('');
@@ -1693,7 +1711,7 @@ function generateDebriefQuestions(ts){
   var losses=ts.filter(function(t){return t.outcome==='Loss';});
   var totalPnl=ts.reduce(function(a,t){return a+(t.pnl_usd||0);},0);
   var badEmotions=ts.filter(function(t){return ['FOMO','Revenge','Anxious','Frustrated','Impulsive','Overconfident'].includes(t.emotion);});
-  var ruleBreaks=ts.filter(function(t){var c=t.confluences||{};return !c['Bookmap Stack']||!c['CVD Divergence']||!c['HTF POI']||!c['Absorption'];});
+  var ruleBreaks=ts.filter(function(t){var c=t.confluences||{};return !c['Bookmap Stack']||!c['CVD Divergence']||!c['HTF POI']||!c['Absorption']||!c['High Volume Node'];});
   var overtraded=ts.length>2;
   var twoLosses=losses.length>=2;
   var noSetup=ts.filter(function(t){return !t.setup_num;});
@@ -1705,7 +1723,7 @@ function generateDebriefQuestions(ts){
   else{var pnlStr=(totalPnl>=0?'+$':'-$')+Math.abs(totalPnl||0).toLocaleString();qs.push('You ended '+wins.length+'W / '+losses.length+'L ('+pnlStr+'). Did the losing trade have all four confluences present or was something missing?');}
   if(overtraded)qs.push('You took '+ts.length+' trades today — over the 2-trade limit. What happened after the second trade that made you keep going?');
   if(twoLosses&&ts.length>losses.length)qs.push('Two losses and you kept trading. What did the third trade look like to you in the moment versus what you see now?');
-  if(ruleBreaks.length){var rb=ruleBreaks[0];var c=rb.confluences||{};var missing=!c['Bookmap Stack']?'Bookmap':!c['CVD Divergence']?'CVD divergence':!c['HTF POI']?'HTF POI':'Absorption';qs.push('Your '+(rb.outcome||'')+' trade was missing '+missing+' confirmation. Did you notice at the time or only in review?');}
+  if(ruleBreaks.length){var rb=ruleBreaks[0];var c=rb.confluences||{};var missing=!c['Bookmap Stack']?'Bookmap':!c['CVD Divergence']?'CVD divergence':!c['HTF POI']?'HTF POI':!c['Absorption']?'Absorption':'HVN';qs.push('Your '+(rb.outcome||'')+' trade was missing '+missing+' confirmation. Did you notice at the time or only in review?');}
   if(noSetup.length)qs.push('One or more trades were logged without a setup type. Did you identify the POC ownership and candle close before entering, or were you unsure?');
   if(defenseTrades.length>0&&trapTrades.length===0)qs.push('You only took Defense setups today. Did you see any Trap setups (1 or 3) that you passed on? Why?');
   if(badEmotions.length)qs.push('You logged '+badEmotions[0].emotion+' as your emotional state. Did that affect your entry criteria or did you stick to the process anyway?');
@@ -1739,7 +1757,6 @@ function previewTrack(idx){if(!audioTracks[idx])return;var audio=new Audio(audio
 function removeTrack(idx){audioTracks.splice(idx,1);try{localStorage.setItem('atj_audio',JSON.stringify(audioTracks));}catch(e){}renderAudioList();}
 function playWinSound(){if(localStorage.getItem('atj_sound')==='off'||!audioTracks.length)return;var track=audioTracks[Math.floor(Math.random()*audioTracks.length)];var flash=document.getElementById('win-flash');if(flash){flash.classList.add('show');setTimeout(function(){flash.classList.remove('show');},600);}var audio=new Audio(track.dataUrl);audio.volume=0.85;audio.play().catch(function(){});}
 
-// PNL CARDS
 function toggleTabBar(){var wrap=document.getElementById('tab-bar-wrap');if(!wrap)return;var hidden=wrap.classList.toggle('hidden');var scroll=document.getElementById('scroll-area');if(scroll)scroll.style.paddingBottom=hidden?'40px':'';}
 
 async function loadTrades(){
@@ -1752,7 +1769,6 @@ async function init(){
   var now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
   var fd=document.getElementById('f-date');if(fd)fd.value=todayStr();
   loadSettings();
-  // Always use hardcoded credentials - clear any stale localStorage values
   delete settings.supaUrl;
   delete settings.supaKey;
   updateStatusBar();
