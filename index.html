@@ -727,10 +727,10 @@ body {
           <button class="filter-chip" onclick="setFilter('loss',this)">Losses</button>
           <button class="filter-chip" onclick="setFilter('prime',this)">Prime</button>
           <button class="filter-chip" onclick="setFilter('good',this)">Good</button>
-          <button class="filter-chip" onclick="setFilter('setup1',this)">Long Trap</button>
-          <button class="filter-chip" onclick="setFilter('setup2',this)">Long Defense</button>
-          <button class="filter-chip" onclick="setFilter('setup3',this)">Short Trap</button>
-          <button class="filter-chip" onclick="setFilter('setup4',this)">Short Defense</button>
+          <button class="filter-chip" onclick="setFilter('setup1',this)">Long Reversal</button>
+          <button class="filter-chip" onclick="setFilter('setup2',this)">Long Continuation</button>
+          <button class="filter-chip" onclick="setFilter('setup3',this)">Short Reversal</button>
+          <button class="filter-chip" onclick="setFilter('setup4',this)">Short Continuation</button>
           <button class="filter-chip" onclick="setFilter('violation',this)">Rule Breaks</button>
         </div>
       </div>
@@ -742,20 +742,12 @@ body {
     <!-- LOG PAGE -->
     <div class="page" id="page-log">
       <div class="form-card">
+
+        <!-- ROW 1: Date + Time + Direction -->
         <div class="form-section">
-          <div class="form-section-label">Session</div>
-          <div class="form-row">
+          <div class="form-row" style="align-items:flex-end">
             <div class="form-group"><div class="form-label">Date</div><input class="form-input" type="date" id="f-date"></div>
             <div class="form-group"><div class="form-label">Time</div><input class="form-input form-input-sm" type="time" id="f-time"></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <div class="form-label">Instrument</div>
-              <div class="btg">
-                <button class="btt sel-core" data-g="instrument" data-v="NQ" onclick="pickToggle(this)">NQ</button>
-                <button class="btt" data-g="instrument" data-v="MNQ" onclick="pickToggle(this)">MNQ</button>
-              </div>
-            </div>
             <div class="form-group">
               <div class="form-label">Direction</div>
               <div class="btg">
@@ -766,35 +758,32 @@ body {
           </div>
         </div>
 
+        <!-- ROW 2: Confluences + Setup -->
         <div class="form-section">
-          <div class="form-section-label">Zone & Signal</div>
           <div class="form-group" style="margin-bottom:14px">
-            <div class="form-label" style="margin-bottom:5px">Confluences <span style="font-weight:400;text-transform:none;font-size:9px;color:var(--text3)">· all three required</span></div>
+            <div class="form-label" style="margin-bottom:5px">Confluences <span style="font-weight:400;text-transform:none;font-size:9px;color:var(--text3)">· all four required</span></div>
             <div class="btg" id="conf-btg">
               <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="Bookmap Stack">Bookmap ★</button>
               <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="CVD Divergence">CVD ★</button>
               <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="HTF POI">HTF POI ★</button>
               <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="Absorption">Absorption ★</button>
-              <button class="btt sel-core" onclick="toggleConf(this)" data-core="1" data-v="High Volume Node">HVN ★</button>
             </div>
-            <div class="core-warn" id="core-warn">Missing core confluence — Bookmap, CVD, HTF POI, Absorption, or HVN not confirmed.</div>
+            <div class="core-warn" id="core-warn">Missing core confluence — Bookmap, CVD, HTF POI, or Absorption not confirmed.</div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <div class="form-label">Setup <span id="setup-lock-hint" style="font-weight:400;text-transform:none;font-size:9px;color:var(--text3)">· confirm absorption first</span></div>
-              <div class="btg" id="setup-btg" style="opacity:0.35;pointer-events:none">
-                <button class="btt" data-g="setup" data-v="1" onclick="pickToggle(this)">Long · Seller POC · Bull close</button>
-                <button class="btt" data-g="setup" data-v="2" onclick="pickToggle(this)">Long · Buyer POC · Bear close</button>
-                <button class="btt" data-g="setup" data-v="3" onclick="pickToggle(this)">Short · Buyer POC · Bear close</button>
-                <button class="btt" data-g="setup" data-v="4" onclick="pickToggle(this)">Short · Seller POC · Bull close</button>
-              </div>
+          <div class="form-group">
+            <div class="form-label">Setup <span id="setup-lock-hint" style="font-weight:400;text-transform:none;font-size:9px;color:var(--text3)">· confirm absorption first</span></div>
+            <div class="btg" id="setup-btg" style="opacity:0.35;pointer-events:none">
+              <button class="btt" data-g="setup" data-v="1" onclick="pickToggle(this)">1 · Long Reversal</button>
+              <button class="btt" data-g="setup" data-v="2" onclick="pickToggle(this)">2 · Long Continuation</button>
+              <button class="btt" data-g="setup" data-v="3" onclick="pickToggle(this)">3 · Short Reversal</button>
+              <button class="btt" data-g="setup" data-v="4" onclick="pickToggle(this)">4 · Short Continuation</button>
             </div>
           </div>
         </div>
 
+        <!-- ROW 3: Outcome + R + P&L + Delta -->
         <div class="form-section">
-          <div class="form-section-label">Execution & Result</div>
-          <div class="form-row">
+          <div class="form-row" style="align-items:flex-end;flex-wrap:wrap;gap:10px">
             <div class="form-group">
               <div class="form-label">Outcome</div>
               <div class="btg">
@@ -803,42 +792,41 @@ body {
                 <button class="btt" data-g="outcome" data-v="Break Even" onclick="pickToggle(this)">BE</button>
               </div>
             </div>
-          </div>
-          <div class="form-row">
             <div class="form-group"><div class="form-label">R Result</div><input class="form-input form-input-sm" type="number" id="f-r" step="0.1" placeholder="+2.0"></div>
             <div class="form-group"><div class="form-label">P&L ($)</div><input class="form-input form-input-sm" type="number" id="f-pnl" placeholder="+400"></div>
+            <div class="form-group"><div class="form-label">Delta</div><input class="form-input form-input-sm" type="number" id="f-delta" placeholder="-220"></div>
+          </div>
+          <div class="form-row" style="margin-top:10px;margin-bottom:0">
+            <div class="form-group">
+              <div class="form-label">Played Out?</div>
+              <div class="btg">
+                <button class="btt" data-g="played_out" data-v="Yes" onclick="pickToggle(this)">Yes</button>
+                <button class="btt" data-g="played_out" data-v="Partial" onclick="pickToggle(this)">Partial</button>
+                <button class="btt" data-g="played_out" data-v="No" onclick="pickToggle(this)">No</button>
+              </div>
+            </div>
           </div>
         </div>
 
+        <!-- ROW 4: Why + Emotion + Notes -->
         <div class="form-section">
-          <div class="form-section-label">Notes & Context</div>
           <div class="form-group" style="margin-bottom:12px">
             <div class="form-label">Why I took this trade <span style="color:var(--red)">*</span></div>
-            <textarea class="form-textarea" id="f-why" placeholder="What exactly did you see? Be specific."></textarea>
+            <textarea class="form-textarea" id="f-why" style="min-height:64px" placeholder="What did you see? CVD, absorption candle, Bookmap wall..."></textarea>
           </div>
           <div class="form-group" style="margin-bottom:12px">
-            <div class="form-label">Emotional State</div>
+            <div class="form-label">State of mind</div>
             <div class="btg">
               <button class="btt" data-g="emotion" data-v="Calm" onclick="pickToggle(this)">Calm</button>
               <button class="btt" data-g="emotion" data-v="Confident" onclick="pickToggle(this)">Confident</button>
+              <button class="btt" data-g="emotion" data-v="Impulsive" onclick="pickToggle(this)">Impulsive</button>
               <button class="btt" data-g="emotion" data-v="FOMO" onclick="pickToggle(this)">FOMO</button>
               <button class="btt" data-g="emotion" data-v="Revenge" onclick="pickToggle(this)">Revenge</button>
-              <button class="btt" data-g="emotion" data-v="Bored" onclick="pickToggle(this)">Bored</button>
-              <button class="btt" data-g="emotion" data-v="Anxious" onclick="pickToggle(this)">Anxious</button>
-              <button class="btt" data-g="emotion" data-v="Frustrated" onclick="pickToggle(this)">Frustrated</button>
-              <button class="btt" data-g="emotion" data-v="Impulsive" onclick="pickToggle(this)">Impulsive</button>
-              <button class="btt" data-g="emotion" data-v="Hesitant" onclick="pickToggle(this)">Hesitant</button>
-              <button class="btt" data-g="emotion" data-v="Overconfident" onclick="pickToggle(this)">Overconfident</button>
-              <button class="btt" data-g="emotion" data-v="Distracted" onclick="pickToggle(this)">Distracted</button>
             </div>
           </div>
-          <div class="form-group" style="margin-bottom:12px">
-            <div class="form-label">Notes</div>
-            <textarea class="form-textarea" id="f-notes" style="min-height:64px" placeholder="What went well? Execution timing, zone quality..."></textarea>
-          </div>
           <div class="form-group">
-            <div class="form-label">Mistakes</div>
-            <textarea class="form-textarea" id="f-mistakes" style="min-height:64px" placeholder="Any rule breaks? Be honest."></textarea>
+            <div class="form-label">Notes / Mistakes</div>
+            <textarea class="form-textarea" id="f-notes" style="min-height:56px" placeholder="Anything worth remembering — good or bad."></textarea>
           </div>
         </div>
 
@@ -1106,7 +1094,7 @@ function checkCoreWarn() {
   var abs = document.querySelector('[data-v="Absorption"]');
   var warn = document.getElementById('core-warn'); if (!warn) return;
   var hvn = document.querySelector('[data-v="High Volume Node"]');
-  var allCore = (bm&&bm.classList.contains('sel-core')) && (cvd&&cvd.classList.contains('sel-core')) && (htf&&htf.classList.contains('sel-core')) && (abs&&abs.classList.contains('sel-core')) && (hvn&&hvn.classList.contains('sel-core'));
+  var allCore = (bm&&bm.classList.contains('sel-core')) && (cvd&&cvd.classList.contains('sel-core')) && (htf&&htf.classList.contains('sel-core')) && (abs&&abs.classList.contains('sel-core'));
   warn.style.display = allCore ? 'none' : 'block';
   var setupBtg = document.getElementById('setup-btg');
   var hint = document.getElementById('setup-lock-hint');
@@ -1164,13 +1152,17 @@ async function saveTrade() {
   var sessLabel = getSessionLabel(timePst);
   var trade = {
     date: date, direction: direction, poi: getToggle('poi') || '', outcome: outcome,
-    notes: fullNotes, mistakes: document.getElementById('f-mistakes').value.trim(),
-    session: sessLabel, confluences: getSelectedConfs(), instrument: getToggle('instrument') || 'NQ',
+    notes: fullNotes, mistakes: '',
+    session: sessLabel, confluences: getSelectedConfs(), instrument: 'NQ',
     stop_pts: null, risk_usd: null,
     r_result: parseFloat(document.getElementById('f-r').value) || null,
     pnl_usd: parseFloat(document.getElementById('f-pnl').value) || null,
     emotion: getToggle('emotion') || '', why_taken: why,
-    setup_num: setup_num
+    setup_num: setup_num,
+    poc_side: getToggle('poc_side') || '',
+    poc_location: getToggle('poc_loc') || '',
+    absorption_delta: parseFloat(document.getElementById('f-delta').value) || null,
+    played_out: getToggle('played_out') || ''
   };
   btn.textContent = 'Uploading...'; btn.disabled = true;
   try {
@@ -1491,7 +1483,7 @@ function buildMicroCurve(tt) {
 function renderRuleRings(tt) {
   var el = document.getElementById('today-rule-rings'); if(!el) return;
   var losses = tt.filter(function(t){return t.outcome==='Loss';}).length;
-  var allCore = tt.length>0 && tt.every(function(t){var c=t.confluences||{};return c['Bookmap Stack']&&c['CVD Divergence']&&c['HTF POI']&&c['Absorption']&&c['High Volume Node'];});
+  var allCore = tt.length>0 && tt.every(function(t){var c=t.confluences||{};return c['Bookmap Stack']&&c['CVD Divergence']&&c['HTF POI']&&c['Absorption'];});
   var withinSession = !tt.some(function(t){var m=t.notes&&t.notes.match(/Time: (\d+):(\d+)/);return m&&(parseInt(m[1])*60+parseInt(m[2]))>=570;});
   var rules = [
     { label: 'Max 2\ntrades', pass: tt.length<=2, note: tt.length+'/2' },
@@ -1573,7 +1565,7 @@ function openModal(id) {
   var rStr=t.r_result!=null?(t.r_result>0?'+':'')+t.r_result+'R':'—';var pnlStr=t.pnl_usd!=null?(t.pnl_usd>=0?'+$':'-$')+Math.abs(t.pnl_usd).toLocaleString():'—';
   var rCls=t.r_result>0?'color:var(--green)':t.r_result<0?'color:var(--red)':'';var pnlCls=t.pnl_usd>0?'color:var(--green)':t.pnl_usd<0?'color:var(--red)':'';
   var mb=document.getElementById('modal-body');
-  if(mb)mb.innerHTML='<div class="modal-section"><div class="mc-stat-grid"><div class="mc-stat"><div class="mc-stat-l">Outcome</div><div class="mc-stat-v"><span class="outcome-badge out-'+t.outcome.toLowerCase().replace(' ','-')+'">'+t.outcome+'</span></div></div><div class="mc-stat"><div class="mc-stat-l">R Result</div><div class="mc-stat-v" style="'+rCls+'">'+rStr+'</div></div><div class="mc-stat"><div class="mc-stat-l">P&L</div><div class="mc-stat-v" style="'+pnlCls+'">'+pnlStr+'</div></div></div>'+(t.setup_num||t.session||t.emotion?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'+(t.setup_num?'<span class="tr-pill core">'+(['1','Long Trap'].includes(t.setup_num)?'Long Trap':['2'].includes(t.setup_num)?'Long Defense':t.setup_num==='3'?'Short Trap':'Short Defense')+'</span>':'')+(t.session?'<span class="tr-pill opt">'+t.session+' session</span>':'')+(t.emotion?'<span class="emotion-badge emotion-'+(t.emotion||'').toLowerCase()+'">'+t.emotion+'</span>':'')+'</div>':'')+'</div>'+(t.why_taken?'<div class="modal-section"><div class="modal-section-label">Why I took this trade</div><div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic">&ldquo;'+t.why_taken+'&rdquo;</div></div>':'')+'<div class="modal-section"><div class="modal-section-label">Confluences</div>'+(confRows||'<div style="font-size:12px;color:var(--text3)">None logged</div>')+'</div>'+(t.notes||t.mistakes?'<div class="modal-section" style="display:grid;grid-template-columns:'+(t.notes&&t.mistakes?'1fr 1fr':'1fr')+';gap:14px">'+(t.notes?'<div><div class="modal-section-label">Notes</div><div style="font-size:12px;color:var(--text2);line-height:1.65;white-space:pre-wrap">'+t.notes+'</div></div>':'')+(t.mistakes?'<div><div class="modal-section-label">Mistakes</div><div style="font-size:12px;color:var(--red);line-height:1.65">'+t.mistakes+'</div></div>':'')+'</div>':'')+(shots.length?'<div class="modal-section"><div class="modal-section-label">Screenshots</div><div style="display:flex;flex-direction:column;gap:8px">'+shots.map(function(url){return'<img src="'+url+'" data-ss="1" style="width:100%;border-radius:10px;cursor:zoom-in" loading="lazy">';}).join('')+'</div></div>':'');
+  if(mb)mb.innerHTML='<div class="modal-section"><div class="mc-stat-grid"><div class="mc-stat"><div class="mc-stat-l">Outcome</div><div class="mc-stat-v"><span class="outcome-badge out-'+t.outcome.toLowerCase().replace(' ','-')+'">'+t.outcome+'</span></div></div><div class="mc-stat"><div class="mc-stat-l">R Result</div><div class="mc-stat-v" style="'+rCls+'">'+rStr+'</div></div><div class="mc-stat"><div class="mc-stat-l">P&L</div><div class="mc-stat-v" style="'+pnlCls+'">'+pnlStr+'</div></div></div>'+(t.setup_num||t.session||t.emotion?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'+(t.setup_num?'<span class="tr-pill core">'+({1:'Long Reversal',2:'Long Continuation',3:'Short Reversal',4:'Short Continuation'}[t.setup_num]||t.setup_num)+'</span>':'')+(t.poc_side?'<span class="tr-pill opt">POC '+t.poc_side+'</span>':'')+(t.poc_location?'<span class="tr-pill opt">'+t.poc_location+'</span>':'')+(t.absorption_delta!=null?'<span class="tr-pill opt">Δ '+(t.absorption_delta>0?'+':'')+t.absorption_delta+'</span>':'')+(t.played_out?'<span class="tr-pill '+(t.played_out==='Yes'?'core':t.played_out==='No'?'core-off':'opt')+'">'+t.played_out==='Yes'?'Played out ✓':t.played_out==='No'?'Did not play out':t.played_out+'</span>':'')+(t.session?'<span class="tr-pill opt">'+t.session+' session</span>':'')+(t.emotion?'<span class="emotion-badge emotion-'+(t.emotion||'').toLowerCase()+'">'+t.emotion+'</span>':'')+'</div>':'')+'</div>'+(t.why_taken?'<div class="modal-section"><div class="modal-section-label">Why I took this trade</div><div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic">&ldquo;'+t.why_taken+'&rdquo;</div></div>':'')+'<div class="modal-section"><div class="modal-section-label">Confluences</div>'+(confRows||'<div style="font-size:12px;color:var(--text3)">None logged</div>')+'</div>'+(t.notes||t.mistakes?'<div class="modal-section" style="display:grid;grid-template-columns:'+(t.notes&&t.mistakes?'1fr 1fr':'1fr')+';gap:14px">'+(t.notes?'<div><div class="modal-section-label">Notes</div><div style="font-size:12px;color:var(--text2);line-height:1.65;white-space:pre-wrap">'+t.notes+'</div></div>':'')+(t.mistakes?'<div><div class="modal-section-label">Mistakes</div><div style="font-size:12px;color:var(--red);line-height:1.65">'+t.mistakes+'</div></div>':'')+'</div>':'')+(shots.length?'<div class="modal-section"><div class="modal-section-label">Screenshots</div><div style="display:flex;flex-direction:column;gap:8px">'+shots.map(function(url){return'<img src="'+url+'" data-ss="1" style="width:100%;border-radius:10px;cursor:zoom-in" loading="lazy">';}).join('')+'</div></div>':'');
   var del=document.getElementById('modal-del'); if(del)del.onclick=function(){deleteTrade(id);};
   var editBtn=document.getElementById('modal-edit-btn'); if(editBtn)editBtn.onclick=function(){editTrade(id);};
   document.getElementById('modal').classList.add('open'); document.body.style.overflow='hidden';
@@ -1614,10 +1606,9 @@ function clearForm(){
   var btn=document.getElementById('save-btn');if(btn){btn.textContent='Save Trade';btn.dataset.editId='';}
   var cb=document.getElementById('cancel-edit-btn');if(cb)cb.style.display='none';
   var existing=document.getElementById('ss-existing');if(existing)existing.remove();
-  ['f-date','f-time','f-notes','f-mistakes','f-why','f-pnl','f-r'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=id==='f-date'?todayStr():'';});
+  ['f-date','f-time','f-notes','f-why','f-pnl','f-r','f-delta'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=id==='f-date'?todayStr():'';});
   document.querySelectorAll('.btt').forEach(function(b){b.className='btt';});
   document.querySelectorAll('[data-core="1"]').forEach(function(b){b.className='btt sel-core';});
-  var nq=document.querySelector('[data-g="instrument"][data-v="NQ"]');if(nq)nq.className='btt sel-core';
   var warn=document.getElementById('core-warn');if(warn)warn.style.display='none';
   var setupBtg=document.getElementById('setup-btg');if(setupBtg){setupBtg.style.opacity='0.35';setupBtg.style.pointerEvents='none';}
   var hint=document.getElementById('setup-lock-hint');if(hint)hint.style.display='inline';
@@ -1639,12 +1630,16 @@ function editTrade(id){
     var notes=t.notes||'';var timeMatch=notes.match(/Time: (\S+)/);
     var ft=document.getElementById('f-time');if(ft&&timeMatch)ft.value=timeMatch[1];
     document.getElementById('f-notes').value=notes.replace(/\nTime:[^\n]*|\nSetup:[^\n]*/g,'').trim();
-    document.getElementById('f-mistakes').value=t.mistakes||'';document.getElementById('f-why').value=t.why_taken||'';
+    document.getElementById('f-why').value=t.why_taken||'';
     document.getElementById('f-pnl').value=t.pnl_usd||'';document.getElementById('f-r').value=t.r_result||'';
+    document.getElementById('f-delta').value=t.absorption_delta||'';
     function st2(g,v){if(!v)return;var b=document.querySelector('.btt[data-g="'+g+'"][data-v="'+v+'"]');if(b){document.querySelectorAll('.btt[data-g="'+g+'"]').forEach(function(x){x.className='btt';});b.className='btt sel-default';}}
     st2('direction',t.direction);st2('outcome',t.outcome);st2('emotion',t.emotion);
     st2('setup',t.setup_num||'');
     st2('instrument',t.instrument||'NQ');
+    st2('poc_side',t.poc_side||'');
+    st2('poc_loc',t.poc_location||'');
+    st2('played_out',t.played_out||'');
     if(t.confluences){document.querySelectorAll('#conf-btg button').forEach(function(btn){var v=btn.getAttribute('data-v');var isCore=btn.getAttribute('data-core')==='1';if(v&&t.confluences.hasOwnProperty(v)){btn.className=t.confluences[v]?(isCore?'btt sel-core':'btt sel-default'):'btt';}else if(isCore){btn.className='btt';}});checkCoreWarn();}
     var saveBtn=document.getElementById('save-btn');if(saveBtn){saveBtn.textContent='Update Trade';saveBtn.dataset.editId=id;}
     var cancelBtn=document.getElementById('cancel-edit-btn');if(cancelBtn)cancelBtn.style.display='inline-flex';
@@ -1716,8 +1711,8 @@ function generateDebriefQuestions(ts){
   var twoLosses=losses.length>=2;
   var noSetup=ts.filter(function(t){return !t.setup_num;});
   var slowTrades=ts.filter(function(t){return t.session==='Slow';});
-  var trapTrades=ts.filter(function(t){return t.setup_num==='1'||t.setup_num==='3';});
-  var defenseTrades=ts.filter(function(t){return t.setup_num==='2'||t.setup_num==='4';});
+  var reversalTrades=ts.filter(function(t){return t.setup_num==='1'||t.setup_num==='3';});
+  var continuationTrades=ts.filter(function(t){return t.setup_num==='2'||t.setup_num==='4';});
   if(wins.length===ts.length){qs.push('Clean session — '+wins.length+' for '+ts.length+'. Were all four confluences present on every trade or did you get lucky on one?');}
   else if(losses.length===ts.length){qs.push('Both trades lost. Were the HVNs you traded aligned with a clear HTF POI, or were you forcing locations?');}
   else{var pnlStr=(totalPnl>=0?'+$':'-$')+Math.abs(totalPnl||0).toLocaleString();qs.push('You ended '+wins.length+'W / '+losses.length+'L ('+pnlStr+'). Did the losing trade have all four confluences present or was something missing?');}
@@ -1725,7 +1720,7 @@ function generateDebriefQuestions(ts){
   if(twoLosses&&ts.length>losses.length)qs.push('Two losses and you kept trading. What did the third trade look like to you in the moment versus what you see now?');
   if(ruleBreaks.length){var rb=ruleBreaks[0];var c=rb.confluences||{};var missing=!c['Bookmap Stack']?'Bookmap':!c['CVD Divergence']?'CVD divergence':!c['HTF POI']?'HTF POI':!c['Absorption']?'Absorption':'HVN';qs.push('Your '+(rb.outcome||'')+' trade was missing '+missing+' confirmation. Did you notice at the time or only in review?');}
   if(noSetup.length)qs.push('One or more trades were logged without a setup type. Did you identify the POC ownership and candle close before entering, or were you unsure?');
-  if(defenseTrades.length>0&&trapTrades.length===0)qs.push('You only took Defense setups today. Did you see any Trap setups (1 or 3) that you passed on? Why?');
+  if(continuationTrades.length>0&&reversalTrades.length===0)qs.push('You only took Continuation setups today. Did you see any Reversal setups (1 or 3) that you passed on? Why?');
   if(badEmotions.length)qs.push('You logged '+badEmotions[0].emotion+' as your emotional state. Did that affect your entry criteria or did you stick to the process anyway?');
   if(slowTrades.length)qs.push('You traded after 9am. Was the HVN and HTF POI alignment unusually clean, or did you trade because you wanted one more?');
   return qs.slice(0,5);
