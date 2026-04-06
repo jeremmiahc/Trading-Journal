@@ -1321,13 +1321,16 @@ function renderToday() {
   var tt = trades.filter(function(t) { return t.date === today; });
   var wins = tt.filter(function(t) { return t.outcome === 'Win'; });
   var losses = tt.filter(function(t) { return t.outcome === 'Loss'; });
+  var bes = tt.filter(function(t) { return t.outcome === 'Break Even'; });
   var totalPnl = tt.reduce(function(a,t) { return a+(t.pnl_usd||0); }, 0);
   var totalR = tt.reduce(function(a,t) { return a+(t.r_result||0); }, 0);
   var wr = (wins.length+losses.length) > 0 ? Math.round(wins.length/(wins.length+losses.length)*100) : null;
   var pnlEl = document.getElementById('today-pnl');
   if (pnlEl) { pnlEl.textContent = tt.length ? (totalPnl>=0?'+$':'-$')+Math.abs(totalPnl).toLocaleString() : '—'; pnlEl.className='pnl-amount '+(tt.length?(totalPnl>0?'pos':totalPnl<0?'neg':'zero'):'zero'); }
   var pnlSub = document.getElementById('today-pnl-sub');
-  if (pnlSub) pnlSub.textContent = tt.length ? tt.length+' trade'+(tt.length!==1?'s':'')+' · '+(totalR>=0?'+':'')+totalR.toFixed(2)+'R' : 'No trades yet';
+  var subParts=[tt.length+' trade'+(tt.length!==1?'s':''),'R: '+(totalR>=0?'+':'')+totalR.toFixed(2)];
+  if(bes.length) subParts.push(bes.length+' BE');
+  if (pnlSub) pnlSub.textContent = tt.length ? subParts.join(' · ') : 'No trades yet';
   var wrEl = document.getElementById('today-wr'); if(wrEl){wrEl.textContent=wr!==null?wr+'%':'—';wrEl.className='stat-item-v'+(wr>=50?' pos':wr!==null?' neg':'');}
   var rEl = document.getElementById('today-r'); if(rEl){rEl.textContent=tt.length?(totalR>=0?'+':'')+totalR.toFixed(2)+'R':'—';rEl.className='stat-item-v'+(totalR>0?' pos':totalR<0?' neg':'');}
   var cEl = document.getElementById('today-count'); if(cEl){cEl.textContent=tt.length+' / 2';cEl.className='stat-item-v'+(tt.length>=2?' neg':'');}
@@ -1440,28 +1443,29 @@ function renderHistory() {
 }
 
 function renderStatsPage() {
-  var wins=trades.filter(function(t){return t.outcome==='Win';}); var losses=trades.filter(function(t){return t.outcome==='Loss';});
+  var wins=trades.filter(function(t){return t.outcome==='Win';}); var losses=trades.filter(function(t){return t.outcome==='Loss';}); var bes=trades.filter(function(t){return t.outcome==='Break Even';});
   var total=trades.length; var wr=(wins.length+losses.length)>0?Math.round(wins.length/(wins.length+losses.length)*100):null;
   var totalPnl=trades.reduce(function(a,t){return a+(t.pnl_usd||0);},0);
   var rTrades=trades.filter(function(t){return t.r_result!=null;});
   var avgR=rTrades.length?(rTrades.reduce(function(a,t){return a+t.r_result;},0)/rTrades.length):null;
   var stWr=document.getElementById('st-wr'); if(stWr){stWr.textContent=wr!==null?wr+'%':'—';stWr.className='stats-big-val'+(wr>=50?' pos':wr!==null?' neg':'');}
-  var stWrSub=document.getElementById('st-wr-sub'); if(stWrSub)stWrSub.textContent=total?wins.length+'W · '+losses.length+'L':'No trades';
+  var stWrSub=document.getElementById('st-wr-sub'); if(stWrSub)stWrSub.textContent=total?wins.length+'W · '+losses.length+'L'+(bes.length?' · '+bes.length+'BE':''):'No trades';
   var pnlStr=totalPnl>=0?'+$'+totalPnl.toLocaleString():'-$'+Math.abs(totalPnl).toLocaleString();
   var stPnl=document.getElementById('st-pnl'); if(stPnl){stPnl.textContent=total?pnlStr:'—';stPnl.className='stats-big-val'+(totalPnl>0?' pos':totalPnl<0?' neg':'');}
   var stAvgr=document.getElementById('st-avgr'); if(stAvgr){stAvgr.textContent=avgR!==null?(avgR>0?'+':'')+avgR.toFixed(2)+'R':'—';stAvgr.className='stats-big-val'+(avgR>0?' pos':avgR!==null?' neg':'');}
   var stAvgrSub=document.getElementById('st-avgr-sub'); if(stAvgrSub)stAvgrSub.textContent=rTrades.length+' trades w/ R';
   var curCount=0,curType='';
-  for(var i=0;i<trades.length;i++){if(i===0){curType=trades[i].outcome;curCount=1;}else if(trades[i].outcome===curType){curCount++;}else break;}
+  var nonBe=trades.filter(function(t){return t.outcome==='Win'||t.outcome==='Loss';});
+  for(var i=0;i<nonBe.length;i++){if(i===0){curType=nonBe[i].outcome;curCount=1;}else if(nonBe[i].outcome===curType){curCount++;}else break;}
   var stStreak=document.getElementById('st-streak'); if(stStreak){stStreak.textContent=curCount?curCount+(curType==='Win'?' W':' L'):'—';stStreak.className='stats-big-val'+(curType==='Win'?' pos':curType==='Loss'?' neg':'');}
   var stStreakSub=document.getElementById('st-streak-sub'); if(stStreakSub)stStreakSub.textContent=curType==='Win'?'Win streak':curType==='Loss'?'Loss streak':'—';
   function bkd(el,items){if(!el)return;el.innerHTML=items.filter(function(i){return i.n>0;}).map(function(item){var c=item.pct===null?'var(--text4)':item.pct>=60?'var(--green)':item.pct>=45?'var(--amber)':'var(--red)';return '<div class="bkd-row"><div class="bkd-label">'+item.label+' <span style="color:var(--text3);font-size:10px">('+item.n+')</span></div><div class="bkd-bar-wrap"><div class="bkd-bar" style="width:'+(item.pct||0)+'%;background:'+c+'"></div></div><div class="bkd-val" style="color:'+c+'">'+(item.pct!==null?item.pct+'%':'—')+'</div></div>';}).join('')||'<div style="font-size:12px;color:var(--text3);padding:4px 0">No data yet</div>';}
   bkd(document.getElementById('stats-sess'),['Prime','Good','Slow'].map(function(s){var st2=trades.filter(function(t){return(t.session||getSessionLabel((t.notes||'').match(/Time: (\S+)/)?.[1]||''))===s;});var sw=st2.filter(function(t){return t.outcome==='Win';}).length;var sl=st2.filter(function(t){return t.outcome==='Loss';}).length;return{label:s,n:st2.length,pct:(sw+sl)>0?Math.round(sw/(sw+sl)*100):null};}));
   bkd(document.getElementById('stats-emotion'),['Calm','Confident','FOMO','Revenge','Bored','Anxious','Frustrated','Impulsive','Hesitant','Overconfident','Distracted'].map(function(e){var et=trades.filter(function(t){return t.emotion===e;});var ew=et.filter(function(t){return t.outcome==='Win';}).length;var el2=et.filter(function(t){return t.outcome==='Loss';}).length;return{label:e,n:et.length,pct:(ew+el2)>0?Math.round(ew/(ew+el2)*100):null};}));
-  var dayMap={};trades.forEach(function(t){if(!dayMap[t.date])dayMap[t.date]={pnl:0,wins:0,losses:0};dayMap[t.date].pnl+=(t.pnl_usd||0);if(t.outcome==='Win')dayMap[t.date].wins++;if(t.outcome==='Loss')dayMap[t.date].losses++;});
-  var days=Object.keys(dayMap).map(function(d){return{date:d,pnl:dayMap[d].pnl,wins:dayMap[d].wins,losses:dayMap[d].losses};}).sort(function(a,b){return b.pnl-a.pnl;});
+  var dayMap={};trades.forEach(function(t){if(!dayMap[t.date])dayMap[t.date]={pnl:0,wins:0,losses:0,bes:0};dayMap[t.date].pnl+=(t.pnl_usd||0);if(t.outcome==='Win')dayMap[t.date].wins++;else if(t.outcome==='Loss')dayMap[t.date].losses++;else if(t.outcome==='Break Even')dayMap[t.date].bes++;});
+  var days=Object.keys(dayMap).map(function(d){return{date:d,pnl:dayMap[d].pnl,wins:dayMap[d].wins,losses:dayMap[d].losses,bes:dayMap[d].bes};}).sort(function(a,b){return b.pnl-a.pnl;});
   var sd=document.getElementById('stats-days');
-  if(sd)sd.innerHTML=days.length?days.slice(0,3).concat(days.slice(-2).reverse()).map(function(d){var c=d.pnl>=0?'var(--green)':'var(--red)';var p=(d.pnl>=0?'+$':'-$')+Math.abs(d.pnl).toLocaleString();return'<div class="bkd-row"><div class="bkd-label">'+fDate(d.date)+'</div><div style="font-size:10px;color:var(--text3)">'+d.wins+'W '+d.losses+'L</div><div class="bkd-val" style="color:'+c+'">'+p+'</div></div>';}).join(''):'<div style="font-size:12px;color:var(--text3)">No data</div>';
+  if(sd)sd.innerHTML=days.length?days.slice(0,3).concat(days.slice(-2).reverse()).map(function(d){var c=d.pnl>=0?'var(--green)':'var(--red)';var p=(d.pnl>=0?'+$':'-$')+Math.abs(d.pnl).toLocaleString();var breakdown=d.wins+'W '+d.losses+'L'+(d.bes?' '+d.bes+'BE':'');return'<div class="bkd-row"><div class="bkd-label">'+fDate(d.date)+'</div><div style="font-size:10px;color:var(--text3)">'+breakdown+'</div><div class="bkd-val" style="color:'+c+'">'+p+'</div></div>';}).join(''):'<div style="font-size:12px;color:var(--text3)">No data</div>';
 }
 
 function buildMicroCurve(tt) {
@@ -1548,7 +1552,7 @@ function renderConfluenceCorrelation() {
   var el=document.getElementById('conf-corr-table'); if(!el)return;
   if(!trades.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">No trades yet</div>';return;}
   var confStats={};
-  trades.forEach(function(t){var c=t.confluences||{};Object.keys(c).forEach(function(k){if(!c[k])return;if(!confStats[k])confStats[k]={wins:0,total:0};confStats[k].total++;if(t.outcome==='Win')confStats[k].wins++;});});
+  trades.forEach(function(t){var c=t.confluences||{};Object.keys(c).forEach(function(k){if(!c[k])return;if(!confStats[k])confStats[k]={wins:0,total:0};if(t.outcome==='Win'||t.outcome==='Loss'){confStats[k].total++;if(t.outcome==='Win')confStats[k].wins++;}});});
   var keys=Object.keys(confStats).filter(function(k){return confStats[k].total>=1;});
   if(!keys.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:4px 0">Log more trades</div>';return;}
   keys.sort(function(a,b){return(confStats[b].wins/confStats[b].total)-(confStats[a].wins/confStats[a].total);});
@@ -1722,8 +1726,8 @@ function statBox(label,val,cls){return'<div style="background:var(--surface2);bo
 
 function startEndSession(){
   var today=todayStr();var todayTrades=trades.filter(function(t){return t.date===today;});if(!todayTrades.length)return;
-  var wins=todayTrades.filter(function(t){return t.outcome==='Win';}).length;var losses=todayTrades.filter(function(t){return t.outcome==='Loss';}).length;var dayR=todayTrades.reduce(function(a,t){return a+(t.r_result||0);},0);
-  var ds=document.getElementById('es-daily-stats');if(ds)ds.innerHTML=statBox('Trades',todayTrades.length,'')+statBox('Result',wins+'W / '+losses+'L',wins>losses?'green':losses>wins?'red':'')+statBox('Total R',dayR!==0?(dayR>0?'+':'')+dayR.toFixed(1)+'R':'—',dayR>0?'green':dayR<0?'red':'');
+  var wins=todayTrades.filter(function(t){return t.outcome==='Win';}).length;var losses=todayTrades.filter(function(t){return t.outcome==='Loss';}).length;var bes2=todayTrades.filter(function(t){return t.outcome==='Break Even';}).length;var dayR=todayTrades.reduce(function(a,t){return a+(t.r_result||0);},0);
+  var ds=document.getElementById('es-daily-stats');var resultLabel=wins+'W / '+losses+'L'+(bes2?' / '+bes2+'BE':'');if(ds)ds.innerHTML=statBox('Trades',todayTrades.length,'')+statBox('Result',resultLabel,wins>losses?'green':losses>wins?'red':'')+statBox('Total R',dayR!==0?(dayR>0?'+':'')+dayR.toFixed(1)+'R':'—',dayR>0?'green':dayR<0?'red':'');
   var qs=generateDebriefQuestions(todayTrades);
   window._currentDebriefQuestions=qs;
   var qEl=document.getElementById('es-questions');
@@ -1734,6 +1738,7 @@ function generateDebriefQuestions(ts){
   var qs=[];
   var wins=ts.filter(function(t){return t.outcome==='Win';});
   var losses=ts.filter(function(t){return t.outcome==='Loss';});
+  var bes=ts.filter(function(t){return t.outcome==='Break Even';});
   var totalPnl=ts.reduce(function(a,t){return a+(t.pnl_usd||0);},0);
   var badEmotions=ts.filter(function(t){return ['FOMO','Revenge','Anxious','Frustrated','Impulsive','Overconfident'].includes(t.emotion);});
   var ruleBreaks=ts.filter(function(t){var c=t.confluences||{};return !c['Bookmap Stack']||!c['CVD Divergence']||!c['HTF POI']||!c['Absorption'];});
@@ -1743,9 +1748,12 @@ function generateDebriefQuestions(ts){
   var slowTrades=ts.filter(function(t){return t.session==='Slow';});
   var reversalTrades=ts.filter(function(t){return t.setup_num==='1'||t.setup_num==='3';});
   var continuationTrades=ts.filter(function(t){return t.setup_num==='2'||t.setup_num==='4';});
+  var decisiveTrades=wins.length+losses.length;
   if(wins.length===ts.length){qs.push('Clean session — '+wins.length+' for '+ts.length+'. Were all four confluences present on every trade or did you get lucky on one?');}
-  else if(losses.length===ts.length){var poiTypes=ts.map(function(t){return t.poi_type||'unknown';}).join(', ');qs.push('Both trades lost. What was the HTF POI type for each — rejection block, FVG, or prior level? Was the HVN clearly aligned with it or were you forcing the location?');}
-  else{var pnlStr=(totalPnl>=0?'+$':'-$')+Math.abs(totalPnl||0).toLocaleString();qs.push('You ended '+wins.length+'W / '+losses.length+'L ('+pnlStr+'). On the losing trade — what was the HTF POI type and did the 1-minute setup form cleanly inside the zone or were you slightly off the level?');}
+  else if(losses.length===ts.length&&bes.length===0){qs.push('Both trades lost. What was the HTF POI type for each — rejection block, FVG, or prior level? Was the HVN clearly aligned with it or were you forcing the location?');}
+  else if(bes.length===ts.length){qs.push('Break even session — capital protected. Did price reach your target before reversing, or did you exit early? What would you do differently on the management?');}
+  else if(wins.length>0&&losses.length===0&&bes.length>0){qs.push('Wins and break evens — no losses. On the BE trade, did price reach target and reverse or did you manage it early? Was the exit decision process-based or emotional?');}
+  else{var pnlStr=(totalPnl>=0?'+$':'-$')+Math.abs(totalPnl||0).toLocaleString();qs.push('You ended '+wins.length+'W / '+losses.length+'L'+(bes.length?' / '+bes.length+'BE':'')+' ('+pnlStr+'). On the losing trade — what was the HTF POI type and did the 1-minute setup form cleanly inside the zone or were you slightly off the level?');}
   if(overtraded)qs.push('You took '+ts.length+' trades today — over the 2-trade limit. What happened after the second trade that made you keep going?');
   if(twoLosses&&ts.length>losses.length)qs.push('Two losses and you kept trading. What did the third trade look like to you in the moment versus what you see now?');
   if(ruleBreaks.length){var rb=ruleBreaks[0];var c=rb.confluences||{};var missing=!c['Bookmap Stack']?'Bookmap':!c['CVD Divergence']?'CVD divergence':!c['HTF POI']?'HTF POI':'Absorption';qs.push('Your '+(rb.outcome||'')+' trade was missing '+missing+' confirmation. Did you notice at the time or only in review?');}
