@@ -770,6 +770,15 @@ body {
             </div>
             <div class="core-warn" id="core-warn">Missing core confluence — Bookmap, CVD, HTF POI, or Absorption not confirmed.</div>
           </div>
+          <div class="form-group" style="margin-bottom:14px">
+            <div class="form-label">HTF POI Type <span style="font-weight:400;text-transform:none;font-size:9px;color:var(--text3)">· what was the location?</span></div>
+            <div class="btg">
+              <button class="btt" data-g="poi_type" data-v="Rejection Block" onclick="pickToggle(this)">Rejection Block</button>
+              <button class="btt" data-g="poi_type" data-v="FVG" onclick="pickToggle(this)">FVG</button>
+              <button class="btt" data-g="poi_type" data-v="Prior Session Level" onclick="pickToggle(this)">Prior Session Level</button>
+              <button class="btt" data-g="poi_type" data-v="Prior Day Level" onclick="pickToggle(this)">Prior Day Level</button>
+            </div>
+          </div>
           <div class="form-group">
             <div class="form-label">Setup <span id="setup-lock-hint" style="font-weight:400;text-transform:none;font-size:9px;color:var(--text3)">· confirm absorption first</span></div>
             <div class="btg" id="setup-btg" style="opacity:0.35;pointer-events:none">
@@ -812,7 +821,7 @@ body {
         <div class="form-section">
           <div class="form-group" style="margin-bottom:12px">
             <div class="form-label">Why I took this trade <span style="color:var(--red)">*</span></div>
-            <textarea class="form-textarea" id="f-why" style="min-height:64px" placeholder="What did you see? CVD, absorption candle, Bookmap wall..."></textarea>
+            <textarea class="form-textarea" id="f-why" style="min-height:64px" placeholder="What did you see? CVD divergence, absorption candle, Bookmap wall, rejection block or FVG location..."></textarea>
           </div>
           <div class="form-group" style="margin-bottom:12px">
             <div class="form-label">State of mind</div>
@@ -1162,7 +1171,8 @@ async function saveTrade() {
     poc_side: getToggle('poc_side') || '',
     poc_location: getToggle('poc_loc') || '',
     absorption_delta: parseFloat(document.getElementById('f-delta').value) || null,
-    played_out: getToggle('played_out') || ''
+    played_out: getToggle('played_out') || '',
+    poi_type: getToggle('poi_type') || ''
   };
   btn.textContent = 'Uploading...'; btn.disabled = true;
   try {
@@ -1565,7 +1575,7 @@ function openModal(id) {
   var rStr=t.r_result!=null?(t.r_result>0?'+':'')+t.r_result+'R':'—';var pnlStr=t.pnl_usd!=null?(t.pnl_usd>=0?'+$':'-$')+Math.abs(t.pnl_usd).toLocaleString():'—';
   var rCls=t.r_result>0?'color:var(--green)':t.r_result<0?'color:var(--red)':'';var pnlCls=t.pnl_usd>0?'color:var(--green)':t.pnl_usd<0?'color:var(--red)':'';
   var mb=document.getElementById('modal-body');
-  if(mb)mb.innerHTML='<div class="modal-section"><div class="mc-stat-grid"><div class="mc-stat"><div class="mc-stat-l">Outcome</div><div class="mc-stat-v"><span class="outcome-badge out-'+t.outcome.toLowerCase().replace(' ','-')+'">'+t.outcome+'</span></div></div><div class="mc-stat"><div class="mc-stat-l">R Result</div><div class="mc-stat-v" style="'+rCls+'">'+rStr+'</div></div><div class="mc-stat"><div class="mc-stat-l">P&L</div><div class="mc-stat-v" style="'+pnlCls+'">'+pnlStr+'</div></div></div>'+(t.setup_num||t.session||t.emotion?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'+(t.setup_num?'<span class="tr-pill core">'+({1:'Long Reversal',2:'Long Continuation',3:'Short Reversal',4:'Short Continuation'}[t.setup_num]||t.setup_num)+'</span>':'')+(t.poc_side?'<span class="tr-pill opt">POC '+t.poc_side+'</span>':'')+(t.poc_location?'<span class="tr-pill opt">'+t.poc_location+'</span>':'')+(t.absorption_delta!=null?'<span class="tr-pill opt">Δ '+(t.absorption_delta>0?'+':'')+t.absorption_delta+'</span>':'')+(t.played_out?'<span class="tr-pill '+(t.played_out==='Yes'?'core':t.played_out==='No'?'core-off':'opt')+'">'+t.played_out==='Yes'?'Played out ✓':t.played_out==='No'?'Did not play out':t.played_out+'</span>':'')+(t.session?'<span class="tr-pill opt">'+t.session+' session</span>':'')+(t.emotion?'<span class="emotion-badge emotion-'+(t.emotion||'').toLowerCase()+'">'+t.emotion+'</span>':'')+'</div>':'')+'</div>'+(t.why_taken?'<div class="modal-section"><div class="modal-section-label">Why I took this trade</div><div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic">&ldquo;'+t.why_taken+'&rdquo;</div></div>':'')+'<div class="modal-section"><div class="modal-section-label">Confluences</div>'+(confRows||'<div style="font-size:12px;color:var(--text3)">None logged</div>')+'</div>'+(t.notes||t.mistakes?'<div class="modal-section" style="display:grid;grid-template-columns:'+(t.notes&&t.mistakes?'1fr 1fr':'1fr')+';gap:14px">'+(t.notes?'<div><div class="modal-section-label">Notes</div><div style="font-size:12px;color:var(--text2);line-height:1.65;white-space:pre-wrap">'+t.notes+'</div></div>':'')+(t.mistakes?'<div><div class="modal-section-label">Mistakes</div><div style="font-size:12px;color:var(--red);line-height:1.65">'+t.mistakes+'</div></div>':'')+'</div>':'')+(shots.length?'<div class="modal-section"><div class="modal-section-label">Screenshots</div><div style="display:flex;flex-direction:column;gap:8px">'+shots.map(function(url){return'<img src="'+url+'" data-ss="1" style="width:100%;border-radius:10px;cursor:zoom-in" loading="lazy">';}).join('')+'</div></div>':'');
+  if(mb)mb.innerHTML='<div class="modal-section"><div class="mc-stat-grid"><div class="mc-stat"><div class="mc-stat-l">Outcome</div><div class="mc-stat-v"><span class="outcome-badge out-'+t.outcome.toLowerCase().replace(' ','-')+'">'+t.outcome+'</span></div></div><div class="mc-stat"><div class="mc-stat-l">R Result</div><div class="mc-stat-v" style="'+rCls+'">'+rStr+'</div></div><div class="mc-stat"><div class="mc-stat-l">P&L</div><div class="mc-stat-v" style="'+pnlCls+'">'+pnlStr+'</div></div></div>'+(t.setup_num||t.session||t.emotion?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'+(t.setup_num?'<span class="tr-pill core">'+({1:'Long Reversal',2:'Long Continuation',3:'Short Reversal',4:'Short Continuation'}[t.setup_num]||t.setup_num)+'</span>':'')+(t.poi_type?'<span class="tr-pill opt">'+t.poi_type+'</span>':'')+(t.absorption_delta!=null?'<span class="tr-pill opt">Δ '+(t.absorption_delta>0?'+':'')+t.absorption_delta+'</span>':'')+(t.played_out?'<span class="tr-pill '+(t.played_out==='Yes'?'core':t.played_out==='No'?'core-off':'opt')+'">'+({'Yes':'Played out ✓','No':'Did not play out','Partial':'Partial'}[t.played_out]||t.played_out)+'</span>':'')+(t.session?'<span class="tr-pill opt">'+t.session+' session</span>':'')+(t.emotion?'<span class="emotion-badge emotion-'+(t.emotion||'').toLowerCase()+'">'+t.emotion+'</span>':'')+'</div>':'')+'</div>'+(t.why_taken?'<div class="modal-section"><div class="modal-section-label">Why I took this trade</div><div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic">&ldquo;'+t.why_taken+'&rdquo;</div></div>':'')+'<div class="modal-section"><div class="modal-section-label">Confluences</div>'+(confRows||'<div style="font-size:12px;color:var(--text3)">None logged</div>')+'</div>'+(t.notes||t.mistakes?'<div class="modal-section" style="display:grid;grid-template-columns:'+(t.notes&&t.mistakes?'1fr 1fr':'1fr')+';gap:14px">'+(t.notes?'<div><div class="modal-section-label">Notes</div><div style="font-size:12px;color:var(--text2);line-height:1.65;white-space:pre-wrap">'+t.notes+'</div></div>':'')+(t.mistakes?'<div><div class="modal-section-label">Mistakes</div><div style="font-size:12px;color:var(--red);line-height:1.65">'+t.mistakes+'</div></div>':'')+'</div>':'')+(shots.length?'<div class="modal-section"><div class="modal-section-label">Screenshots</div><div style="display:flex;flex-direction:column;gap:8px">'+shots.map(function(url){return'<img src="'+url+'" data-ss="1" style="width:100%;border-radius:10px;cursor:zoom-in" loading="lazy">';}).join('')+'</div></div>':'');
   var del=document.getElementById('modal-del'); if(del)del.onclick=function(){deleteTrade(id);};
   var editBtn=document.getElementById('modal-edit-btn'); if(editBtn)editBtn.onclick=function(){editTrade(id);};
   document.getElementById('modal').classList.add('open'); document.body.style.overflow='hidden';
@@ -1640,6 +1650,7 @@ function editTrade(id){
     st2('poc_side',t.poc_side||'');
     st2('poc_loc',t.poc_location||'');
     st2('played_out',t.played_out||'');
+    st2('poi_type',t.poi_type||'');
     if(t.confluences){document.querySelectorAll('#conf-btg button').forEach(function(btn){var v=btn.getAttribute('data-v');var isCore=btn.getAttribute('data-core')==='1';if(v&&t.confluences.hasOwnProperty(v)){btn.className=t.confluences[v]?(isCore?'btt sel-core':'btt sel-default'):'btt';}else if(isCore){btn.className='btt';}});checkCoreWarn();}
     var saveBtn=document.getElementById('save-btn');if(saveBtn){saveBtn.textContent='Update Trade';saveBtn.dataset.editId=id;}
     var cancelBtn=document.getElementById('cancel-edit-btn');if(cancelBtn)cancelBtn.style.display='inline-flex';
@@ -1714,8 +1725,8 @@ function generateDebriefQuestions(ts){
   var reversalTrades=ts.filter(function(t){return t.setup_num==='1'||t.setup_num==='3';});
   var continuationTrades=ts.filter(function(t){return t.setup_num==='2'||t.setup_num==='4';});
   if(wins.length===ts.length){qs.push('Clean session — '+wins.length+' for '+ts.length+'. Were all four confluences present on every trade or did you get lucky on one?');}
-  else if(losses.length===ts.length){qs.push('Both trades lost. Were the HVNs you traded aligned with a clear HTF POI, or were you forcing locations?');}
-  else{var pnlStr=(totalPnl>=0?'+$':'-$')+Math.abs(totalPnl||0).toLocaleString();qs.push('You ended '+wins.length+'W / '+losses.length+'L ('+pnlStr+'). Did the losing trade have all four confluences present or was something missing?');}
+  else if(losses.length===ts.length){var poiTypes=ts.map(function(t){return t.poi_type||'unknown';}).join(', ');qs.push('Both trades lost. What was the HTF POI type for each — rejection block, FVG, or prior level? Was the HVN clearly aligned with it or were you forcing the location?');}
+  else{var pnlStr=(totalPnl>=0?'+$':'-$')+Math.abs(totalPnl||0).toLocaleString();qs.push('You ended '+wins.length+'W / '+losses.length+'L ('+pnlStr+'). On the losing trade — what was the HTF POI type and did the 1-minute setup form cleanly inside the zone or were you slightly off the level?');}
   if(overtraded)qs.push('You took '+ts.length+' trades today — over the 2-trade limit. What happened after the second trade that made you keep going?');
   if(twoLosses&&ts.length>losses.length)qs.push('Two losses and you kept trading. What did the third trade look like to you in the moment versus what you see now?');
   if(ruleBreaks.length){var rb=ruleBreaks[0];var c=rb.confluences||{};var missing=!c['Bookmap Stack']?'Bookmap':!c['CVD Divergence']?'CVD divergence':!c['HTF POI']?'HTF POI':!c['Absorption']?'Absorption':'HVN';qs.push('Your '+(rb.outcome||'')+' trade was missing '+missing+' confirmation. Did you notice at the time or only in review?');}
