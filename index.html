@@ -1089,6 +1089,7 @@ async function sbDeleteAll(table) {
 var trades = [], settings = {}, ssFiles = [], ssFilesOf = [], ssFilesBm = [], currentPage = 'today', historyFilter = 'all';
 var audioTracks = [], currentAudio = null, fadeOutTimer = null;
 var calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
+var debriefs = {};
 
 function toggleConf(btn) {
   var isCore = btn.getAttribute('data-core') === '1';
@@ -1415,10 +1416,26 @@ function renderHistory() {
     var dayTrades = groups[d];
     var dayPnl = dayTrades.reduce(function(a,t){return a+(t.pnl_usd||0);},0);
     var pnlStr = dayPnl!==0?(dayPnl>0?' · <span style="color:var(--green)">+$'+dayPnl.toLocaleString()+'</span>':' · <span style="color:var(--red)">-$'+Math.abs(dayPnl).toLocaleString()+'</span>'):'';
+    var debrief = debriefs[d];
+    var debriefHtml = '';
+    if (debrief && debrief.answers && debrief.answers.length) {
+      var answered = debrief.answers.filter(function(a){ return a.a && a.a.trim(); });
+      if (answered.length) {
+        debriefHtml = '<div style="border-top:1px solid var(--border);background:var(--surface2);padding:12px 16px;">' +
+          '<div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text4);margin-bottom:10px">Session Debrief</div>' +
+          answered.map(function(a) {
+            return '<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)">' +
+              '<div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;line-height:1.5">' + (a.q ? 'Q' + a.q + '. ' : '') + (a.question || '') + '</div>' +
+              '<div style="font-size:12px;color:var(--text);line-height:1.65;font-style:italic">' + a.a + '</div>' +
+            '</div>';
+          }).join('') +
+        '</div>';
+      }
+    }
     return '<div style="padding:10px 16px 4px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border)">' +
       '<span style="font-size:11px;font-weight:600;color:var(--text2)">'+fDate(d)+'</span>' +
       '<span style="font-size:11px;color:var(--text3)">'+dayTrades.length+' trade'+(dayTrades.length!==1?'s':'')+'</span>'+pnlStr +
-    '</div>' + dayTrades.map(function(t){return buildTradeRow(t);}).join('');
+    '</div>' + dayTrades.map(function(t){return buildTradeRow(t);}).join('') + debriefHtml;
   }).join('');
 }
 
@@ -1707,7 +1724,9 @@ function startEndSession(){
   var today=todayStr();var todayTrades=trades.filter(function(t){return t.date===today;});if(!todayTrades.length)return;
   var wins=todayTrades.filter(function(t){return t.outcome==='Win';}).length;var losses=todayTrades.filter(function(t){return t.outcome==='Loss';}).length;var dayR=todayTrades.reduce(function(a,t){return a+(t.r_result||0);},0);
   var ds=document.getElementById('es-daily-stats');if(ds)ds.innerHTML=statBox('Trades',todayTrades.length,'')+statBox('Result',wins+'W / '+losses+'L',wins>losses?'green':losses>wins?'red':'')+statBox('Total R',dayR!==0?(dayR>0?'+':'')+dayR.toFixed(1)+'R':'—',dayR>0?'green':dayR<0?'red':'');
-  var qs=generateDebriefQuestions(todayTrades);var qEl=document.getElementById('es-questions');
+  var qs=generateDebriefQuestions(todayTrades);
+  window._currentDebriefQuestions=qs;
+  var qEl=document.getElementById('es-questions');
   if(qEl)qEl.innerHTML=qs.map(function(q,i){return'<div><div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:5px">'+(i+1)+'. '+q+'</div><textarea id="es-q-'+i+'" style="width:100%;padding:9px 11px;border:1px solid var(--border2);border-radius:6px;font-size:12px;color:var(--text);background:var(--surface2);resize:vertical;min-height:60px;font-family:inherit;outline:none" placeholder="Your answer..."></textarea></div>';}).join('');
   switchEsTab('daily');document.getElementById('end-session-modal').style.display='flex';
 }
@@ -1738,9 +1757,14 @@ function generateDebriefQuestions(ts){
 }
 function closeEndSession(){document.getElementById('end-session-modal').style.display='none';}
 async function saveEndSession(){
-  var today=todayStr();var qEls=document.getElementById('es-questions').querySelectorAll('textarea');var answers=[];qEls.forEach(function(ta,i){answers.push({q:i+1,a:ta.value.trim()});});
+  var today=todayStr();
+  var qs=window._currentDebriefQuestions||[];
+  var qEls=document.getElementById('es-questions').querySelectorAll('textarea');
+  var answers=[];
+  qEls.forEach(function(ta,i){answers.push({q:i+1,question:qs[i]||'',a:ta.value.trim()});});
   var dailyData={date:today,answers:answers,saved_at:new Date().toISOString()};
   try{await sbInsert('session_debriefs',dailyData);}catch(e){localStorage.setItem('debrief_'+today,JSON.stringify(dailyData));}
+  debriefs[today]=dailyData;
   var well=(document.getElementById('es-r-well')||{}).value||'';var patterns=(document.getElementById('es-r-patterns')||{}).value||'';var focus=(document.getElementById('es-r-focus')||{}).value||'';var disc=getEsDisc();
   if(well||patterns||focus||disc){var key=weekKey(0).replace('atj_review_','');var weeklyData={well:well,patterns:patterns,focus:focus,discipline:disc,saved:new Date().toISOString()};try{await sbUpsert('weekly_reviews',{week_key:key,data:weeklyData},'week_key');}catch(e){localStorage.setItem('atj_review_'+key,JSON.stringify(weeklyData));}}
   closeEndSession();toast('Session saved','green');
@@ -1767,7 +1791,14 @@ function toggleTabBar(){var wrap=document.getElementById('tab-bar-wrap');if(!wra
 
 async function loadTrades(){
   setConn('loading','Fetching trades...');
-  try{trades=await sbSelect('trades','created_at.desc');setConn('ok','Connected · '+trades.length+' trades');renderAll();}
+  try{
+    trades=await sbSelect('trades','created_at.desc');
+    var rawDebriefs=await sbGetAll('session_debriefs');
+    debriefs={};
+    rawDebriefs.forEach(function(d){ if(d.date) debriefs[d.date]=d; });
+    setConn('ok','Connected · '+trades.length+' trades');
+    renderAll();
+  }
   catch(e){setConn('err',e.message);trades=[];renderAll();}
 }
 
