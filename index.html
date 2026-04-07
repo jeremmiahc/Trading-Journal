@@ -1496,11 +1496,12 @@ function buildMicroCurve(tt) {
   var isPos = totalR >= 0;
   var lineCol = isPos ? '#166534' : '#991b1b';
   var n = cumR.length;
-  var W = 300; var H = 48;
-  var pad = {t:6,r:6,b:6,l:6};
-  var cW = W-pad.l-pad.r; var cH = H-pad.t-pad.b;
-  function sx(i){return pad.l+(i/(n-1))*cW;}
-  function sy(v){return pad.t+cH-((v-minR)/range)*cH;}
+  var W = 400; var H = 60;
+  var pad = {t:8, r:20, b:8, l:20};
+  var cW = W - pad.l - pad.r;
+  var cH = H - pad.t - pad.b;
+  function sx(i){ return pad.l + (n > 1 ? (i/(n-1))*cW : cW/2); }
+  function sy(v){ return pad.t + cH - ((v - minR) / range) * cH; }
   var pathD = 'M'+sx(0)+','+sy(cumR[0]);
   for(var i=1;i<n;i++) pathD += ' L'+sx(i)+','+sy(cumR[i]);
   var areaD = pathD + ' L'+sx(n-1)+','+(pad.t+cH)+' L'+sx(0)+','+(pad.t+cH)+' Z';
@@ -1508,18 +1509,19 @@ function buildMicroCurve(tt) {
   var dotsHtml = '';
   rTrades.forEach(function(t,i){
     var col = t.r_result>0?'#166534':t.r_result<0?'#991b1b':'#a8a298';
-    dotsHtml += '<circle cx="'+sx(i+1)+'" cy="'+sy(cumR[i+1])+'" r="2.5" fill="'+col+'" stroke="white" stroke-width="1"/>';
+    var rLabel = (t.r_result>=0?'+':'')+t.r_result.toFixed(1);
+    dotsHtml += '<circle cx="'+sx(i+1)+'" cy="'+sy(cumR[i+1])+'" r="3" fill="'+col+'" stroke="white" stroke-width="1.5"/>';
   });
   var rStr = (totalR>=0?'+':'')+totalR.toFixed(1)+'R';
-  return '<div style="padding:10px 16px 12px">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+  return '<div style="padding:12px 16px 14px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     + '<div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text4)">R Curve Today</div>'
     + '<div style="font-size:12px;font-weight:500;color:'+lineCol+'">'+rStr+'</div>'
     + '</div>'
-    + '<svg width="100%" height="'+H+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">'
-    + '<defs><linearGradient id="'+fillId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+lineCol+'" stop-opacity="0.14"/><stop offset="100%" stop-color="'+lineCol+'" stop-opacity="0"/></linearGradient></defs>'
-    + '<path d="'+areaD+'" fill="url(#'+fillId+')" vector-effect="non-scaling-stroke"/>'
-    + '<path d="'+pathD+'" fill="none" stroke="'+lineCol+'" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>'
+    + '<svg width="100%" height="'+H+'" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs><linearGradient id="'+fillId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+lineCol+'" stop-opacity="0.12"/><stop offset="100%" stop-color="'+lineCol+'" stop-opacity="0"/></linearGradient></defs>'
+    + '<path d="'+areaD+'" fill="url(#'+fillId+')"/>'
+    + '<path d="'+pathD+'" fill="none" stroke="'+lineCol+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'
     + dotsHtml
     + '</svg>'
     + '</div>';
