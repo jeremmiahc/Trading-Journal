@@ -1465,7 +1465,22 @@ function renderStatsPage() {
   var dayMap={};trades.forEach(function(t){if(!dayMap[t.date])dayMap[t.date]={pnl:0,wins:0,losses:0,bes:0};dayMap[t.date].pnl+=(t.pnl_usd||0);if(t.outcome==='Win')dayMap[t.date].wins++;else if(t.outcome==='Loss')dayMap[t.date].losses++;else if(t.outcome==='Break Even')dayMap[t.date].bes++;});
   var days=Object.keys(dayMap).map(function(d){return{date:d,pnl:dayMap[d].pnl,wins:dayMap[d].wins,losses:dayMap[d].losses,bes:dayMap[d].bes};}).sort(function(a,b){return b.pnl-a.pnl;});
   var sd=document.getElementById('stats-days');
-  if(sd)sd.innerHTML=days.length?days.slice(0,3).concat(days.slice(-2).reverse()).map(function(d){var c=d.pnl>=0?'var(--green)':'var(--red)';var p=(d.pnl>=0?'+$':'-$')+Math.abs(d.pnl).toLocaleString();var breakdown=d.wins+'W '+d.losses+'L'+(d.bes?' '+d.bes+'BE':'');return'<div class="bkd-row"><div class="bkd-label">'+fDate(d.date)+'</div><div style="font-size:10px;color:var(--text3)">'+breakdown+'</div><div class="bkd-val" style="color:'+c+'">'+p+'</div></div>';}).join(''):'<div style="font-size:12px;color:var(--text3)">No data</div>';
+  if(sd){
+    if(!days.length){sd.innerHTML='<div style="font-size:12px;color:var(--text3)">No data</div>';}
+    else{
+      var best=days.slice(0,3);
+      var worstDates=new Set(best.map(function(d){return d.date;}));
+      var worst=days.filter(function(d){return !worstDates.has(d.date);}).slice(-2).reverse();
+      var combined=best.concat(worst);
+      sd.innerHTML=combined.map(function(d,i){
+        var c=d.pnl>=0?'var(--green)':'var(--red)';
+        var p=(d.pnl>=0?'+$':'-$')+Math.abs(d.pnl).toLocaleString();
+        var breakdown=d.wins+'W '+d.losses+'L'+(d.bes?' '+d.bes+'BE':'');
+        var divider=i===best.length-1&&worst.length?'border-bottom:1px dashed var(--border2);margin-bottom:4px;padding-bottom:4px;':'';
+        return'<div class="bkd-row" style="'+divider+'"><div class="bkd-label">'+fDate(d.date)+'</div><div style="font-size:10px;color:var(--text3)">'+breakdown+'</div><div class="bkd-val" style="color:'+c+'">'+p+'</div></div>';
+      }).join('');
+    }
+  }
 }
 
 function buildMicroCurve(tt) {
