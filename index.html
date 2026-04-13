@@ -1129,17 +1129,35 @@ async function uploadScreenshots() {
     {files: ssFiles, tag: 'other'}
   ];
   var urls = [];
+  var failed = 0;
   for (var g = 0; g < allFiles.length; g++) {
     var group = allFiles[g];
     for (var i = 0; i < group.files.length; i++) {
       var file = group.files[i]; if (!file || !file.name) continue;
       var ext = file.name.split('.').pop() || 'jpg';
-      var path = 'trade-' + group.tag + '-' + Date.now() + '-' + i + '.' + ext;
-      var res = await fetch(getSupaUrl() + '/storage/v1/object/screenshots/' + path, { method: 'POST', headers: { 'apikey': getSupaKey(), 'Authorization': 'Bearer ' + getSupaKey(), 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' }, body: file });
-      if (!res.ok) throw new Error('Screenshot upload failed');
-      urls.push(getSupaUrl() + '/storage/v1/object/public/screenshots/' + path);
+      var path = 'trade-' + group.tag + '-' + Date.now() + '-' + Math.random().toString(36).slice(2,7) + '.' + ext;
+      var uploaded = false;
+      // Try up to 2 times
+      for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+          var res = await fetch(getSupaUrl() + '/storage/v1/object/screenshots/' + path, {
+            method: 'POST',
+            headers: { 'apikey': getSupaKey(), 'Authorization': 'Bearer ' + getSupaKey(), 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' },
+            body: file
+          });
+          if (res.ok) {
+            urls.push(getSupaUrl() + '/storage/v1/object/public/screenshots/' + path);
+            uploaded = true;
+            break;
+          }
+        } catch(e) {}
+        // Wait 500ms before retry
+        if (attempt === 0) await new Promise(function(r){setTimeout(r, 500);});
+      }
+      if (!uploaded) failed++;
     }
   }
+  if (failed > 0) toast(failed + ' screenshot(s) failed to upload — trade saved without them', 'red');
   return urls;
 }
 
@@ -1610,7 +1628,15 @@ function openModal(id) {
   var coreOn=[],coreOff=[],optional=[];
   Object.keys(c).forEach(function(k){if(coreKeys.includes(k)){if(c[k])coreOn.push(k);else coreOff.push(k);}else if(c[k])optional.push(k);});
   var confRows=coreOff.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--red)"></div><div class="mc-conf-name" style="color:var(--text3);text-decoration:line-through">'+k+'</div><span class="mc-conf-tag" style="background:var(--red-bg);color:var(--red)">missing</span></div>';}).join('')+coreOn.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--amber)"></div><div class="mc-conf-name" style="font-weight:500">'+k+'</div><span class="mc-conf-tag" style="background:var(--amber-bg);color:var(--amber)">core</span></div>';}).join('')+optional.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--green)"></div><div class="mc-conf-name" style="color:var(--text2)">'+k+'</div></div>';}).join('');
-  var shots=t.screenshot_urls||t.screenshots||[];if(typeof shots==='string'){try{shots=JSON.parse(shots);}catch(e){shots=[];}}shots=shots.filter(Boolean);
+  var shots=t.screenshot_urls||t.screenshots||[];if(typeof shots==='string'){try{shots=JSON.parse(shots);}catch(e){shots=[];}}
+  shots=shots.filter(Boolean).map(function(url){
+    // Normalize — if URL doesn't start with http, prepend the full storage path
+    if(url.indexOf('http')!==0){
+      return getSupaUrl()+'/storage/v1/object/public/screenshots/'+url.replace(/^\//,'');
+    }
+    // If URL uses /object/screenshots/ (private path) convert to /object/public/screenshots/
+    return url.replace('/storage/v1/object/screenshots/','/storage/v1/object/public/screenshots/');
+  });
   var rStr=t.r_result!=null?(t.r_result>0?'+':'')+t.r_result+'R':'—';var pnlStr=t.pnl_usd!=null?(t.pnl_usd>=0?'+$':'-$')+Math.abs(t.pnl_usd).toLocaleString():'—';
   var rCls=t.r_result>0?'color:var(--green)':t.r_result<0?'color:var(--red)':'';var pnlCls=t.pnl_usd>0?'color:var(--green)':t.pnl_usd<0?'color:var(--red)':'';
   var mb=document.getElementById('modal-body');
