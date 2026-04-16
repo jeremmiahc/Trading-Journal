@@ -1847,6 +1847,15 @@ async function loadTrades(){
   setConn('loading','Fetching trades...');
   try{
     trades=await sbSelect('trades','created_at.desc');
+    // Normalize screenshot_urls for every trade — Postgres may return as string or array
+    trades=trades.map(function(t){
+      var s=t.screenshot_urls;
+      if(!s){t.screenshot_urls=[];}
+      else if(typeof s==='string'){try{t.screenshot_urls=JSON.parse(s);}catch(e){t.screenshot_urls=[];}}
+      else if(!Array.isArray(s)){t.screenshot_urls=[];}
+      t.screenshot_urls=t.screenshot_urls.filter(Boolean);
+      return t;
+    });
     var rawDebriefs=await sbGetAll('session_debriefs');
     debriefs={};
     rawDebriefs.forEach(function(d){ if(d.date) debriefs[d.date]=d; });
