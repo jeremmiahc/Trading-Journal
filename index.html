@@ -1681,7 +1681,9 @@ function clearForm(){
   var warn=document.getElementById('core-warn');if(warn)warn.style.display='none';
   var setupBtg=document.getElementById('setup-btg');if(setupBtg){setupBtg.style.opacity='0.35';setupBtg.style.pointerEvents='none';}
   var hint=document.getElementById('setup-lock-hint');if(hint)hint.style.display='inline';
-  ssFiles=[];ssFilesOf=[];ssFilesBm=[];
+  ssFiles.length=0;ssFilesOf.length=0;ssFilesBm.length=0;
+  // Also reset file inputs so same file can be re-selected
+  ['f-ss','f-ss-of','f-ss-bm'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['ss-previews','ss-previews-of','ss-previews-bm'].forEach(function(id){var sp=document.getElementById(id);if(sp)sp.innerHTML='';});
   checkCoreWarn();
 }
@@ -1732,9 +1734,9 @@ async function deleteTrade(id){if(!confirm('Delete this trade?'))return;try{awai
 
 function setupDrop(){
   var slots=[
-    {id:'ss-drop-of', getArr:function(){return ssFilesOf;}, setArr:function(a){ssFilesOf=a;}, previewId:'ss-previews-of'},
-    {id:'ss-drop-bm', getArr:function(){return ssFilesBm;}, setArr:function(a){ssFilesBm=a;}, previewId:'ss-previews-bm'},
-    {id:'ss-drop',    getArr:function(){return ssFiles;},   setArr:function(a){ssFiles=a;},   previewId:'ss-previews'}
+    {id:'ss-drop-of', arr:ssFilesOf, previewId:'ss-previews-of'},
+    {id:'ss-drop-bm', arr:ssFilesBm, previewId:'ss-previews-bm'},
+    {id:'ss-drop',    arr:ssFiles,   previewId:'ss-previews'}
   ];
   slots.forEach(function(slot){
     var drop=document.getElementById(slot.id);if(!drop||drop._ready)return;drop._ready=true;
@@ -1742,11 +1744,10 @@ function setupDrop(){
     drop.addEventListener('dragleave',function(){drop.classList.remove('dragover');});
     drop.addEventListener('drop',function(e){
       e.preventDefault();drop.classList.remove('dragover');
-      var arr=slot.getArr();
       Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('image/');}).forEach(function(file){
-        var idx=arr.length;arr.push(file);
+        var idx=slot.arr.length;slot.arr.push(file);
         var reader=new FileReader();
-        reader.onload=function(ev){addThumb(ev.target.result,idx,arr,slot.previewId);};
+        reader.onload=function(ev){addThumb(ev.target.result,idx,slot.arr,slot.previewId);};
         reader.readAsDataURL(file);
       });
     });
