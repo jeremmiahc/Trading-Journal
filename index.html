@@ -1732,9 +1732,9 @@ async function deleteTrade(id){if(!confirm('Delete this trade?'))return;try{awai
 
 function setupDrop(){
   var slots=[
-    {id:'ss-drop-of',arr:ssFilesOf,previewId:'ss-previews-of'},
-    {id:'ss-drop-bm',arr:ssFilesBm,previewId:'ss-previews-bm'},
-    {id:'ss-drop',arr:ssFiles,previewId:'ss-previews'}
+    {id:'ss-drop-of', getArr:function(){return ssFilesOf;}, setArr:function(a){ssFilesOf=a;}, previewId:'ss-previews-of'},
+    {id:'ss-drop-bm', getArr:function(){return ssFilesBm;}, setArr:function(a){ssFilesBm=a;}, previewId:'ss-previews-bm'},
+    {id:'ss-drop',    getArr:function(){return ssFiles;},   setArr:function(a){ssFiles=a;},   previewId:'ss-previews'}
   ];
   slots.forEach(function(slot){
     var drop=document.getElementById(slot.id);if(!drop||drop._ready)return;drop._ready=true;
@@ -1742,10 +1742,11 @@ function setupDrop(){
     drop.addEventListener('dragleave',function(){drop.classList.remove('dragover');});
     drop.addEventListener('drop',function(e){
       e.preventDefault();drop.classList.remove('dragover');
+      var arr=slot.getArr();
       Array.from(e.dataTransfer.files).filter(function(f){return f.type.startsWith('image/');}).forEach(function(file){
-        var idx=slot.arr.length;slot.arr.push(file);
+        var idx=arr.length;arr.push(file);
         var reader=new FileReader();
-        reader.onload=function(ev){addThumb(ev.target.result,idx,slot.arr,slot.previewId);};
+        reader.onload=function(ev){addThumb(ev.target.result,idx,arr,slot.previewId);};
         reader.readAsDataURL(file);
       });
     });
