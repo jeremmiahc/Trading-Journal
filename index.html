@@ -1206,12 +1206,14 @@ async function saveTrade() {
     if (editId) {
       var updated = await sbUpdate('trades', editId, trade);
       newTrade = Array.isArray(updated) ? updated[0] : updated;
-      trades = trades.map(function(x){ return x.id===editId ? newTrade : x; });
+      newTrade = normalizeScreenshots(newTrade);
+      trades = trades.map(function(x){ return x.id==editId ? newTrade : x; });
       btn.dataset.editId = ''; btn.textContent = 'Save Trade';
       if(existingEl) existingEl.remove();
     } else {
       var inserted = await sbInsert('trades', trade);
       newTrade = Array.isArray(inserted) ? inserted[0] : inserted;
+      newTrade = normalizeScreenshots(newTrade);
       trades.unshift(newTrade);
     }
     clearForm();
@@ -1621,22 +1623,14 @@ function renderEquity() {
 }
 
 function openModal(id) {
-  var t=trades.find(function(x){return x.id===id;}); if(!t)return;
+  var t=trades.find(function(x){return x.id==id;}); if(!t)return;
   var mt=document.getElementById('modal-title');
   if(mt)mt.innerHTML='<span class="dir-badge dir-'+(t.direction==='Long'?'long':'short')+'">'+t.direction+'</span>'+(t.instrument?' <span class="inst-badge">'+t.instrument+'</span>':'')+' <span style="font-size:13px;color:var(--text2);font-weight:400">'+fDate(t.date)+'</span>';
   var c=t.confluences||{}; var coreKeys=['Bookmap Stack','CVD Divergence','HTF POI','Absorption'];
   var coreOn=[],coreOff=[],optional=[];
   Object.keys(c).forEach(function(k){if(coreKeys.includes(k)){if(c[k])coreOn.push(k);else coreOff.push(k);}else if(c[k])optional.push(k);});
   var confRows=coreOff.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--red)"></div><div class="mc-conf-name" style="color:var(--text3);text-decoration:line-through">'+k+'</div><span class="mc-conf-tag" style="background:var(--red-bg);color:var(--red)">missing</span></div>';}).join('')+coreOn.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--amber)"></div><div class="mc-conf-name" style="font-weight:500">'+k+'</div><span class="mc-conf-tag" style="background:var(--amber-bg);color:var(--amber)">core</span></div>';}).join('')+optional.map(function(k){return'<div class="mc-conf-row"><div class="mc-conf-dot" style="background:var(--green)"></div><div class="mc-conf-name" style="color:var(--text2)">'+k+'</div></div>';}).join('');
-  var shots=t.screenshot_urls||t.screenshots||[];if(typeof shots==='string'){try{shots=JSON.parse(shots);}catch(e){shots=[];}}
-  shots=shots.filter(Boolean).map(function(url){
-    // Normalize — if URL doesn't start with http, prepend the full storage path
-    if(url.indexOf('http')!==0){
-      return getSupaUrl()+'/storage/v1/object/public/screenshots/'+url.replace(/^\//,'');
-    }
-    // If URL uses /object/screenshots/ (private path) convert to /object/public/screenshots/
-    return url.replace('/storage/v1/object/screenshots/','/storage/v1/object/public/screenshots/');
-  });
+  var shots=t.screenshot_urls||[];
   var rStr=t.r_result!=null?(t.r_result>0?'+':'')+t.r_result+'R':'—';var pnlStr=t.pnl_usd!=null?(t.pnl_usd>=0?'+$':'-$')+Math.abs(t.pnl_usd).toLocaleString():'—';
   var rCls=t.r_result>0?'color:var(--green)':t.r_result<0?'color:var(--red)':'';var pnlCls=t.pnl_usd>0?'color:var(--green)':t.pnl_usd<0?'color:var(--red)':'';
   var mb=document.getElementById('modal-body');
@@ -1843,19 +1837,33 @@ function playWinSound(){if(localStorage.getItem('atj_sound')==='off'||!audioTrac
 
 function toggleTabBar(){var wrap=document.getElementById('tab-bar-wrap');if(!wrap)return;var hidden=wrap.classList.toggle('hidden');var scroll=document.getElementById('scroll-area');if(scroll)scroll.style.paddingBottom=hidden?'40px':'';}
 
+// Normalize screenshot_urls from any format Supabase/Postgres might return
+function normalizeScreenshots(t){
+  var s=t.screenshot_urls||t.screenshots||null;
+  if(!s){t.screenshot_urls=[];return t;}
+  // Handle Postgres text[] literal format: {url1,url2} or {"url1","url2"}
+  if(typeof s==='string' && s.charAt(0)==='{'){
+    s=s.slice(1,-1).split(',').map(function(u){return u.replace(/^"|"$/g,'').trim();});
+  }
+  // Handle JSON string
+  else if(typeof s==='string'){
+    try{s=JSON.parse(s);}catch(e){s=[];}
+  }
+  if(!Array.isArray(s)){s=[];}
+  // Normalize each URL to use public path
+  t.screenshot_urls=s.filter(Boolean).map(function(url){
+    if(!url||typeof url!=='string')return null;
+    if(url.indexOf('http')!==0)return getSupaUrl()+'/storage/v1/object/public/screenshots/'+url.replace(/^\//,'');
+    return url.replace('/storage/v1/object/screenshots/','/storage/v1/object/public/screenshots/');
+  }).filter(Boolean);
+  return t;
+}
+
 async function loadTrades(){
   setConn('loading','Fetching trades...');
   try{
     trades=await sbSelect('trades','created_at.desc');
-    // Normalize screenshot_urls for every trade — Postgres may return as string or array
-    trades=trades.map(function(t){
-      var s=t.screenshot_urls;
-      if(!s){t.screenshot_urls=[];}
-      else if(typeof s==='string'){try{t.screenshot_urls=JSON.parse(s);}catch(e){t.screenshot_urls=[];}}
-      else if(!Array.isArray(s)){t.screenshot_urls=[];}
-      t.screenshot_urls=t.screenshot_urls.filter(Boolean);
-      return t;
-    });
+    trades=trades.map(normalizeScreenshots);
     var rawDebriefs=await sbGetAll('session_debriefs');
     debriefs={};
     rawDebriefs.forEach(function(d){ if(d.date) debriefs[d.date]=d; });
