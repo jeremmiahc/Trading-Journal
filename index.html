@@ -1217,7 +1217,7 @@ async function saveTrade() {
       trades.unshift(newTrade);
     }
     clearForm();
-    navTo('today');
+    navTo(editId ? 'history' : 'today');
     if ((trade.outcome || '').toLowerCase() === 'win') playWinSound();
     toast('Trade saved', 'green');
   } catch(e) { toast('Save failed: ' + (e.message || JSON.stringify(e)), 'red'); }
@@ -1355,7 +1355,11 @@ function renderToday() {
   if (pnlSub) pnlSub.textContent = tt.length ? subParts.join(' · ') : 'No trades yet';
   var wrEl = document.getElementById('today-wr'); if(wrEl){wrEl.textContent=wr!==null?wr+'%':'—';wrEl.className='stat-item-v'+(wr>=50?' pos':wr!==null?' neg':'');}
   var rEl = document.getElementById('today-r'); if(rEl){rEl.textContent=tt.length?(totalR>=0?'+':'')+totalR.toFixed(2)+'R':'—';rEl.className='stat-item-v'+(totalR>0?' pos':totalR<0?' neg':'');}
-  var cEl = document.getElementById('today-count'); if(cEl){cEl.textContent=tt.length+' / 2';cEl.className='stat-item-v'+(tt.length>=2?' neg':'');}
+  var cEl = document.getElementById('today-count'); if(cEl){
+    var consLosses=0;for(var ci=tt.length-1;ci>=0;ci--){if(tt[ci].outcome==='Loss')consLosses++;else break;}
+    cEl.textContent=tt.length+' trades';
+    cEl.className='stat-item-v'+(consLosses>=2?' neg':'');
+  }
   var esBtn = document.getElementById('end-session-btn'); if(esBtn) esBtn.style.display=tt.length?'block':'none';
   var qaBtn = document.getElementById('qa-end-session'); if(qaBtn){qaBtn.style.opacity=tt.length?'1':'0.45';qaBtn.style.pointerEvents=tt.length?'auto':'none';}
 
@@ -1552,13 +1556,14 @@ function buildMicroCurve(tt) {
 function renderRuleRings(tt) {
   var el = document.getElementById('today-rule-rings'); if(!el) return;
   var losses = tt.filter(function(t){return t.outcome==='Loss';}).length;
+  var consecLosses=(function(){var cl=0;for(var i=tt.length-1;i>=0;i--){if(tt[i].outcome==='Loss')cl++;else break;}return cl;})();
   var allCore = tt.length>0 && tt.every(function(t){var c=t.confluences||{};return c['Bookmap Stack']&&c['CVD Divergence']&&c['HTF POI']&&c['Absorption'];});
-  var withinSession = !tt.some(function(t){var m=t.notes&&t.notes.match(/Time: (\d+):(\d+)/);return m&&(parseInt(m[1])*60+parseInt(m[2]))>=570;});
+  var withinSession = !tt.some(function(t){var m=t.notes&&t.notes.match(/Time: (\d+):(\d+)/);return m&&(parseInt(m[1])*60+parseInt(m[2]))>=540;});
   var rules = [
-    { label: 'Max 2\ntrades', pass: tt.length<=2, note: tt.length+'/2' },
+    { label: 'No consec\nlosses', pass: consecLosses<2, note: consecLosses>=2?'stop trading':consecLosses+' consec' },
     { label: 'Core\nconfs', pass: tt.length===0||allCore, note: tt.length?'all ✓':'no trades' },
     { label: 'Loss\nlimit', pass: losses<2, note: losses+' loss'+(losses!==1?'es':'') },
-    { label: 'Session\nwindow', pass: withinSession, note: 'by 9:30' },
+    { label: 'Session\nwindow', pass: withinSession, note: 'by 9:00' },
   ];
   el.innerHTML = rules.map(function(r) {
     var passCol = '#166534'; var failCol = '#991b1b';
@@ -1784,7 +1789,8 @@ function generateDebriefQuestions(ts){
   var totalPnl=ts.reduce(function(a,t){return a+(t.pnl_usd||0);},0);
   var badEmotions=ts.filter(function(t){return ['FOMO','Revenge','Anxious','Frustrated','Impulsive','Overconfident'].includes(t.emotion);});
   var ruleBreaks=ts.filter(function(t){var c=t.confluences||{};return !c['Bookmap Stack']||!c['CVD Divergence']||!c['HTF POI']||!c['Absorption'];});
-  var overtraded=ts.length>2;
+  var consecLossesToday=(function(){var cl=0;for(var i=ts.length-1;i>=0;i--){if(ts[i].outcome==='Loss')cl++;else break;}return cl;})();
+  var overtraded=consecLossesToday>=2;
   var twoLosses=losses.length>=2;
   var noSetup=ts.filter(function(t){return !t.setup_num;});
   var slowTrades=ts.filter(function(t){return t.session==='Slow';});
@@ -1840,13 +1846,13 @@ function generateDebriefQuestions(ts){
   // Conditional follow-up questions
   if(overtraded){
     qs.push(pick([
-      'You took '+ts.length+' trades — over the 2-trade limit. What did the third setup look like to you in the moment?',
-      ts.length+' trades today. What happened after trade 2 that made you keep going — was it a win that lowered your bar or a loss you were chasing?',
-      'Over the daily limit. At what point did you know you were past 2 trades and why did you continue?'
+      'You hit two consecutive losses and kept trading. What did the next setup look like versus what the rules require?',
+      'Two losses in a row — the session should have ended there. Did you close the platform or did you stay at the screen?',
+      'After two consecutive losses you kept going. Was the next entry a valid setup or were you trying to make it back?'
     ]));
   }
 
-  if(twoLosses&&ts.length>losses.length){
+  if(twoLosses&&!overtraded&&ts.length>losses.length){
     qs.push(pick([
       'Two losses and you kept trading. What did the next setup look like versus what the rules require?',
       'You hit the two-loss limit and traded again. Was the next entry an A+ setup or were you forcing it?',
